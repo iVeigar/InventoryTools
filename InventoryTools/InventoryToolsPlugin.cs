@@ -34,6 +34,7 @@ using Dalamud.Game.ClientState.Objects;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
+using ECommons;
 using InventoryTools.Commands;
 using InventoryTools.EquipmentSuggest;
 using InventoryTools.Highlighting;
@@ -90,6 +91,7 @@ namespace InventoryTools
             _pluginLog = pluginLog;
             _framework = framework;
             PluginInterface = pluginInterface;
+            ECommonsMain.Init(PluginInterface, this, ECommons.Module.DalamudReflector);
             this.Host = CreateHost();
             Start();
             this.Host.Services.GetRequiredService<MediatorService>().Publish(new PluginLoadedMessage());
@@ -244,6 +246,7 @@ namespace InventoryTools
             builder.RegisterSingletonSelfAndInterfaces<WindowSystemFactory>();
             builder.RegisterSingletonSelfAndInterfaces<CsvLoaderService>();
             builder.RegisterSingletonSelfAndInterfaces<BackgroundTaskCollector>();
+            builder.RegisterSingletonSelfAndInterfaces<RestockService>();
 
             //Transient registrations
             builder.RegisterTransientSelfAndInterfaces<BackgroundTaskQueue>();

@@ -42,6 +42,7 @@ using ImGuiUtil = OtterGui.ImGuiUtil;
 using InventoryItem = FFXIVClientStructs.FFXIV.Client.Game.InventoryItem;
 using PopupMenu = InventoryTools.Ui.Widgets.PopupMenu;
 using StringExtensions = InventoryTools.Extensions.StringExtensions;
+using ECommons.Reflection;
 
 namespace InventoryTools.Ui
 {
@@ -73,6 +74,7 @@ namespace InventoryTools.Ui
         private readonly IFramework _framework;
         private IEnumerable<IMenuWindow> _menuWindows;
         private ThrottleDispatcher _throttleDispatcher;
+        private readonly RestockService _restockService;
 
         public CraftsWindow(ILogger<CraftsWindow> logger,
             MediatorService mediator,
@@ -100,7 +102,8 @@ namespace InventoryTools.Ui
             IClipboardService clipboardService,
             IKeyState keyState,
             ItemSheet itemSheet,
-            IFramework framework) : base(logger, mediator, imGuiService, configuration, "Crafts Window")
+            IFramework framework,
+            RestockService restockService) : base(logger, mediator, imGuiService, configuration, "Crafts Window")
         {
             _tableService = tableService;
             _configuration = configuration;
@@ -126,6 +129,7 @@ namespace InventoryTools.Ui
             _keyState = keyState;
             _itemSheet = itemSheet;
             _framework = framework;
+            _restockService = restockService;
             Flags = ImGuiWindowFlags.MenuBar;
         }
         public override void Initialize()
@@ -210,7 +214,8 @@ namespace InventoryTools.Ui
         private HoverButton _importTcIcon = new();
         private HoverButton _filtersIcon = new();
         private HoverButton _menuIcon = new();
-
+        private HoverButton _exportArtisanIcon = new();
+        private HoverButton _restockIcon = new();
 
         private TeamCraftImportWindow? _teamCraftImportWindow;
         private List<FilterConfiguration>? _filters;
@@ -455,7 +460,7 @@ namespace InventoryTools.Ui
 
                                 ImGui.Separator();
 
-                                using (var menu = ImRaii.Menu("Copy List Contents"))
+                                using (var menu = ImRaii.Menu("复制列表内容"))
                                 {
                                     if (menu)
                                     {
@@ -513,7 +518,7 @@ namespace InventoryTools.Ui
                                                 "The craft list's gatherables were copied to your clipboard.");
                                         }
 
-                                        if (ImGui.MenuItem("Craft List (Missing Gatherables)"))
+                                        if (ImGui.MenuItem("生产列表 - 采集品所需数量"))
                                         {
                                             var searchResults = SelectedConfiguration.CraftList
                                                 .GetFlattenedMergedMaterials()
@@ -521,10 +526,10 @@ namespace InventoryTools.Ui
                                                 .ToList();
 
                                             var tcString =
-                                                _importExportService.ToTCString(searchResults, TCExportMode.Missing);
+                                                _importExportService.ToTCString(searchResults, TCExportMode.NeededPreUpdate);
                                             _clipboardService.CopyToClipboard(tcString);
                                             _chatUtilities.Print(
-                                                "The craft list's gatherables were copied to your clipboard.");
+                                                "生产列表需要的采集品已复制到剪贴板。");
                                         }
 
                                         if (ImGui.MenuItem("Retainer/Bag List"))
@@ -2462,6 +2467,34 @@ namespace InventoryTools.Ui
             {
                 if (bottomBarChild.Success)
                 {
+                    if (DalamudReflector.TryGetDalamudPlugin("Artisan", out var pl, suppressErrors: false, ignoreCache: true) 
+                        && _exportArtisanIcon.Draw(ImGuiService.GetImageTexture("export2").Handle, "bb_export_artisan"))
+                    {
+                        string list_name_output = "亚拉戈工具 - " + filterConfiguration.Name;
+                        string non_output = string.Join(Environment.NewLine, (from c in filterConfiguration.CraftList.GetFlattenedMergedMaterials()
+                                                                              where !c.IsOutputItem && c.QuantityNeededPreUpdate != 0
+                                                                              select $"{c.QuantityNeededPreUpdate}x {c.Name}").Reverse());
+                        string output = string.Join(Environment.NewLine, from c in filterConfiguration.CraftList.CraftItems
+                                                                         where c.IsOutputItem
+                                                                         select $"{c.QuantityRequired}x {c.Name}");
+                        pl.Call("ImportTeamcraftList", [list_name_output, non_output, output]);
+                        var foP = pl.GetFoP("PluginUi");
+                        foP?.SetFoP("IsOpen", true);
+                        foP?.SetFoP("OpenWindow", 4);
+                    }
+                    ImGuiUtil.HoverTooltip("在Artisan新建列表", ImGuiHoveredFlags.None);
+                    ImGui.SameLine();
+
+                    if (_restockIcon.Draw(ImGuiService.GetImageTexture("export").Handle, "bb_retrieve"))
+                    {
+                        Dictionary<uint, int> items = (from c in filterConfiguration.CraftList.GetFlattenedMergedMaterials()
+                                                       where c.QuantityWillRetrieve != 0
+                                                       select (c.ItemId, (int)c.QuantityWillRetrieve)).ToDictionary();
+                        _restockService.RestockFromRetainers(items);
+                    }
+                    ImGuiUtil.HoverTooltip("一键从雇员补货", ImGuiHoveredFlags.None);
+                    ImGui.SameLine();
+
                     if (_marketIcon.Draw(ImGuiService.GetImageTexture("refresh-web").Handle, "bb_market"))
                     {
                         var activeCharacter = _characterMonitor.ActiveCharacter;
