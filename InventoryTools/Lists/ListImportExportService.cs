@@ -20,6 +20,7 @@ public enum TCExportMode
 {
     Required,
     Missing,
+    NeededPreUpdate
 }
 
 public class ListImportVersionException : Exception
@@ -238,6 +239,9 @@ public class ListImportExportService
                 case TCExportMode.Missing:
                     qty = craftItem.QuantityMissingOverall;
                     break;
+                case TCExportMode.NeededPreUpdate:
+                    qty = craftItem.QuantityNeededPreUpdate;
+                    break;
             }
 
             if (qty != 0)
@@ -274,7 +278,7 @@ public class ListImportExportService
             if (item == null) continue;
             if (searchResult.SortingResult != null && searchResult.InventoryItem != null)
             {
-                    lines.Add($"{searchResult.SortingResult.Quantity}x {item.Base.Name.ExtractText()} {(searchResult.SortingResult.InventoryItem.Flags == InventoryItem.ItemFlags.HighQuality ? " (HQ)" : "")}");
+                lines.Add($"{searchResult.SortingResult.Quantity}x {item.Base.Name.ExtractText()} {(searchResult.SortingResult.InventoryItem.Flags == InventoryItem.ItemFlags.HighQuality ? " (HQ)" : "")}");
             }
             else if (searchResult.CraftItem != null)
             {
