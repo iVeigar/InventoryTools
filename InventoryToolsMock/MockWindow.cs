@@ -102,7 +102,7 @@ public class MockWindow : GenericWindow
     private WorldPicker _activeWorldPicker;
     private WorldPicker _homeWorldPicker;
 
-    public override void Draw()
+    public override void DrawWindow()
     {
         ImGui.ShowStackToolWindow();
         if (ImGui.BeginTabBar("MockTabs"))
@@ -292,7 +292,7 @@ public class MockWindow : GenericWindow
                     {
                             var newWorld = _homeWorldPicker.Items[homeWorldId];
                             activeCharacter.WorldId = newWorld.RowId;
-                            _characterMonitor.UpdateCharacter(activeCharacter);
+                            _characterMonitor.InvokeCharacterUpdated(activeCharacter);
                     }
 
                     int activeWorldId = (int)(activeCharacter.ActiveWorldId);
@@ -304,7 +304,7 @@ public class MockWindow : GenericWindow
                     {
                         var newWorld = _activeWorldPicker.Items[activeWorldId];
                         activeCharacter.ActiveWorldId = newWorld.RowId;
-                        _characterMonitor.UpdateCharacter(activeCharacter);
+                        _characterMonitor.InvokeCharacterUpdated(activeCharacter);
                     }
 
                 }

@@ -73,7 +73,7 @@ namespace InventoryTools.Ui
         private readonly ItemSheet _itemSheet;
         private readonly IFramework _framework;
         private IEnumerable<IMenuWindow> _menuWindows;
-        private ThrottleDispatcher _throttleDispatcher;
+        private ThrottleDispatcher? _throttleDispatcher;
         private readonly RestockService _restockService;
 
         public CraftsWindow(ILogger<CraftsWindow> logger,
@@ -261,7 +261,7 @@ namespace InventoryTools.Ui
 
         private void RefreshCraftList()
         {
-            _throttleDispatcher.ThrottleAsync(RequestRefresh);
+            _throttleDispatcher?.ThrottleAsync(RequestRefresh);
         }
 
         private Task RequestRefresh()
@@ -460,7 +460,7 @@ namespace InventoryTools.Ui
 
                                 ImGui.Separator();
 
-                                using (var menu = ImRaii.Menu("¸´ÖÆÁÐ±íÄÚÈÝ"))
+                                using (var menu = ImRaii.Menu("ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½ï¿½ï¿½"))
                                 {
                                     if (menu)
                                     {
@@ -518,7 +518,7 @@ namespace InventoryTools.Ui
                                                 "The craft list's gatherables were copied to your clipboard.");
                                         }
 
-                                        if (ImGui.MenuItem("Éú²úÁÐ±í - ²É¼¯Æ·ËùÐèÊýÁ¿"))
+                                        if (ImGui.MenuItem("ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ - ï¿½É¼ï¿½Æ·ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½"))
                                         {
                                             var searchResults = SelectedConfiguration.CraftList
                                                 .GetFlattenedMergedMaterials()
@@ -529,7 +529,7 @@ namespace InventoryTools.Ui
                                                 _importExportService.ToTCString(searchResults, TCExportMode.NeededPreUpdate);
                                             _clipboardService.CopyToClipboard(tcString);
                                             _chatUtilities.Print(
-                                                "Éú²úÁÐ±íÐèÒªµÄ²É¼¯Æ·ÒÑ¸´ÖÆµ½¼ôÌù°å¡£");
+                                                "ï¿½ï¿½ï¿½ï¿½ï¿½Ð±ï¿½ï¿½ï¿½Òªï¿½Ä²É¼ï¿½Æ·ï¿½Ñ¸ï¿½ï¿½Æµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½å¡£");
                                         }
 
                                         if (ImGui.MenuItem("Retainer/Bag List"))
@@ -1703,7 +1703,7 @@ namespace InventoryTools.Ui
             }
         }
 
-        public override unsafe void Draw()
+        public override unsafe void DrawWindow()
         {
             DrawMenuBar();
             _popupService.Draw(GetType());
@@ -2470,7 +2470,7 @@ namespace InventoryTools.Ui
                     if (DalamudReflector.TryGetDalamudPlugin("Artisan", out var pl, suppressErrors: false, ignoreCache: true) 
                         && _exportArtisanIcon.Draw(ImGuiService.GetImageTexture("export2").Handle, "bb_export_artisan"))
                     {
-                        string list_name_output = "ÑÇÀ­¸ê¹¤¾ß - " + filterConfiguration.Name;
+                        string list_name_output = "ï¿½ï¿½ï¿½ï¿½ï¿½ê¹¤ï¿½ï¿½ - " + filterConfiguration.Name;
                         string non_output = string.Join(Environment.NewLine, (from c in filterConfiguration.CraftList.GetFlattenedMergedMaterials()
                                                                               where !c.IsOutputItem && c.QuantityNeededPreUpdate != 0
                                                                               select $"{c.QuantityNeededPreUpdate}x {c.Name}").Reverse());
@@ -2482,7 +2482,7 @@ namespace InventoryTools.Ui
                         foP?.SetFoP("IsOpen", true);
                         foP?.SetFoP("OpenWindow", 4);
                     }
-                    ImGuiUtil.HoverTooltip("ÔÚArtisanÐÂ½¨ÁÐ±í", ImGuiHoveredFlags.None);
+                    ImGuiUtil.HoverTooltip("ï¿½ï¿½Artisanï¿½Â½ï¿½ï¿½Ð±ï¿½", ImGuiHoveredFlags.None);
                     ImGui.SameLine();
 
                     if (_restockIcon.Draw(ImGuiService.GetImageTexture("export").Handle, "bb_retrieve"))
@@ -2492,7 +2492,7 @@ namespace InventoryTools.Ui
                                                        select (c.ItemId, (int)c.QuantityWillRetrieve)).ToDictionary();
                         _restockService.RestockFromRetainers(items);
                     }
-                    ImGuiUtil.HoverTooltip("Ò»¼ü´Ó¹ÍÔ±²¹»õ", ImGuiHoveredFlags.None);
+                    ImGuiUtil.HoverTooltip("Ò»ï¿½ï¿½ï¿½Ó¹ï¿½Ô±ï¿½ï¿½ï¿½ï¿½", ImGuiHoveredFlags.None);
                     ImGui.SameLine();
 
                     if (_marketIcon.Draw(ImGuiService.GetImageTexture("refresh-web").Handle, "bb_market"))
@@ -3062,7 +3062,7 @@ namespace InventoryTools.Ui
         protected override void Dispose(bool disposing)
         {
             base.Dispose(disposing);
-            _throttleDispatcher.Dispose();
+            _throttleDispatcher?.Dispose();
         }
 
         public override void OnClose()

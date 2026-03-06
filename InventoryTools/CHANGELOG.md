@@ -8,6 +8,80 @@ Instead the changelog reader and automation surrounding plugin PRs will add the 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.html).
 
+## [14.0.7] - 2026-03-04
+
+### Fixed
+- Fixed hooks for 7.45
+- Fixed issue with Remove column causing right click issues
+
+### Added
+- Added copy item name button column
+
+## [14.0.6] - 2026-02-08
+
+### Fixed
+- Windows should save their position correctly along with keeping their correct position when the UI is hidden
+- Trying on items shouldn't interfere with the Save/Delete outfit button unless trying on more than 1 item()
+
+## [14.0.5] - 2026-02-07
+
+### Added
+- Some of the data required by Allagan Tools is now cached in dalamud's DataShare. 
+- Boot time after the initial load will be increased and other plugins relying on this will take advantage of it once updated.
+- If you prefer the data is not persisted, you can turn it off in settings via Troubleshooting -> Persist Cached Data
+
+## [14.0.4] - 2026-02-05
+
+### Fixed
+- Fixed hooks for 7.41hf1
+
+## [14.0.3] - 2026-01-29
+
+### Fixed
+- Fixed broken market hook
+- Fixed the first plot being tracked as an apartment
+- Fixed certain tooltips expanding out of control
+
+### Changed
+- 7.41 data update
+
+### Added
+- Oizys item sources added
+- Gearset item uses added
+
+## [14.0.2] - 2026-01-12
+
+### Added
+- Added a 'More Information' context menu setting for NPCs and Monsters
+- Added a 'Shared Models' panel to the NPC and Monster windows
+- Added 'Amount Owned' to the tooltip inside the imgui windows when hovering items
+- More spawn data added thanks to Tracky(props to Infi)
+
+### Fixed
+- Certain items were shown as being available on the market even though they aren't
+
+## [14.0.1] - 2026-01-04
+
+### Added
+- Added the desynthesis skill delta column
+- Added the is glamour ready set column
+- Added the is glamour ready set item column
+
+### Fixed
+- Fixed error being thrown if a character was deleted but still referenced by another character in the owner column
+- Fixed submarine locations being shown as the letter instead of the name and letter
+- Context menu actions taken at the marketboard should provide the correct item instead of gil
+
+## [14.0.0] - 2025-12-22
+
+### Added
+- Support for 7.4
+- Initial data for 7.4
+- Pilgrims Traverse loot is now available as a source
+
+### Changed
+- The mob tracker was reworked to use the games object table
+
 ## [13.1.9] - 2025-11-25
 
 ### Fixed

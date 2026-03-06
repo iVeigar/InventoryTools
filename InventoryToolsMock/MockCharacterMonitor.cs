@@ -28,7 +28,7 @@ public class MockCharacterMonitor : ICharacterMonitor
         _characters = new Dictionary<ulong, Character>();
     }
 
-    public void UpdateCharacter(Character character)
+    public void InvokeCharacterUpdated(Character character)
     {
         _framework.RunOnFrameworkThread(() => { OnCharacterUpdated?.Invoke(character); });
     }
@@ -58,7 +58,6 @@ public class MockCharacterMonitor : ICharacterMonitor
                 character.CharacterId = LocalContentId;
                 _characters[character.CharacterId] = character;
             }
-            //character.UpdateFromCurrentPlayer(Service.ClientState.LocalPlayer);
             _framework.RunOnFrameworkThread(() => { OnCharacterUpdated?.Invoke(character); });
         }
         else
