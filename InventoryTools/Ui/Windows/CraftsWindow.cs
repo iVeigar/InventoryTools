@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -460,7 +460,7 @@ namespace InventoryTools.Ui
 
                                 ImGui.Separator();
 
-                                using (var menu = ImRaii.Menu("�����б�����"))
+                                using (var menu = ImRaii.Menu("复制列表内容"))
                                 {
                                     if (menu)
                                     {
@@ -518,7 +518,7 @@ namespace InventoryTools.Ui
                                                 "The craft list's gatherables were copied to your clipboard.");
                                         }
 
-                                        if (ImGui.MenuItem("�����б� - �ɼ�Ʒ��������"))
+                                        if (ImGui.MenuItem("生产列表 - 采集品所需数量"))
                                         {
                                             var searchResults = SelectedConfiguration.CraftList
                                                 .GetFlattenedMergedMaterials()
@@ -529,7 +529,7 @@ namespace InventoryTools.Ui
                                                 _importExportService.ToTCString(searchResults, TCExportMode.NeededPreUpdate);
                                             _clipboardService.CopyToClipboard(tcString);
                                             _chatUtilities.Print(
-                                                "�����б���Ҫ�Ĳɼ�Ʒ�Ѹ��Ƶ������塣");
+                                                "生产列表需要的采集品已复制到剪贴板。");
                                         }
 
                                         if (ImGui.MenuItem("Retainer/Bag List"))
@@ -2470,7 +2470,7 @@ namespace InventoryTools.Ui
                     if (DalamudReflector.TryGetDalamudPlugin("Artisan", out var pl, suppressErrors: false, ignoreCache: true) 
                         && _exportArtisanIcon.Draw(ImGuiService.GetImageTexture("export2").Handle, "bb_export_artisan"))
                     {
-                        string list_name_output = "�����깤�� - " + filterConfiguration.Name;
+                        string list_name_output = "亚拉戈工具 - " + filterConfiguration.Name;
                         string non_output = string.Join(Environment.NewLine, (from c in filterConfiguration.CraftList.GetFlattenedMergedMaterials()
                                                                               where !c.IsOutputItem && c.QuantityNeededPreUpdate != 0
                                                                               select $"{c.QuantityNeededPreUpdate}x {c.Name}").Reverse());
@@ -2482,7 +2482,7 @@ namespace InventoryTools.Ui
                         foP?.SetFoP("IsOpen", true);
                         foP?.SetFoP("OpenWindow", 4);
                     }
-                    ImGuiUtil.HoverTooltip("��Artisan�½��б�", ImGuiHoveredFlags.None);
+                    ImGuiUtil.HoverTooltip("在Artisan新建列表", ImGuiHoveredFlags.None);
                     ImGui.SameLine();
 
                     if (_restockIcon.Draw(ImGuiService.GetImageTexture("export").Handle, "bb_retrieve"))
@@ -2492,7 +2492,7 @@ namespace InventoryTools.Ui
                                                        select (c.ItemId, (int)c.QuantityWillRetrieve)).ToDictionary();
                         _restockService.RestockFromRetainers(items);
                     }
-                    ImGuiUtil.HoverTooltip("һ���ӹ�Ա����", ImGuiHoveredFlags.None);
+                    ImGuiUtil.HoverTooltip("一键从雇员补货", ImGuiHoveredFlags.None);
                     ImGui.SameLine();
 
                     if (_marketIcon.Draw(ImGuiService.GetImageTexture("refresh-web").Handle, "bb_market"))
