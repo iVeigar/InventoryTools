@@ -35,12 +35,6 @@ using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
 
 namespace InventoryTools.Services
 {
-    public class ItemInfo(uint itemId, uint quantity, uint hqQuantity)
-    {
-        public uint ItemId { get; set; } = itemId;
-        public uint Quantity { get; set; } = quantity;
-        public uint HQQuantity { get; set; } = hqQuantity;
-    }
     public sealed class RestockService : IDisposable
     {
         private readonly IDalamudPluginInterface _pluginInterface;
@@ -252,8 +246,8 @@ namespace InventoryTools.Services
         {
             foreach (var x in Svc.Objects)
             {
-                if ((x.ObjectKind == ObjectKind.Housing || x.ObjectKind == ObjectKind.EventObj) && x.Name.ToString().EqualsIgnoreCaseAny(BellName, "リテイナーベル") && x.IsTargetable
-                    && Vector3.Distance(x.Position, Svc.ClientState.LocalPlayer!.Position) < GetValidInteractionDistance(x))
+                if ((x.ObjectKind == ObjectKind.HousingEventObject || x.ObjectKind == ObjectKind.EventObj) && x.Name.ToString().EqualsIgnoreCaseAny(BellName, "リテイナーベル") && x.IsTargetable
+                    && Vector3.Distance(x.Position, Svc.Objects.LocalPlayer!.Position) < GetValidInteractionDistance(x))
                 {
                     return x;
                 }
@@ -263,11 +257,11 @@ namespace InventoryTools.Services
 
         private static float GetValidInteractionDistance(IGameObject bell)
         {
-            if (bell.ObjectKind == ObjectKind.Housing)
+            if (bell.ObjectKind == ObjectKind.HousingEventObject)
             {
                 return 6.5f;
             }
-            else if (Inns.List.Contains(Svc.ClientState.TerritoryType))
+            else if (Inns.List.Contains((ushort)Svc.ClientState.TerritoryType))
             {
                 return 4.75f;
             }
@@ -298,9 +292,9 @@ namespace InventoryTools.Services
         {
             if (Svc.Condition[ConditionFlag.OccupiedSummoningBell]) return true;
             var x = Svc.Targets.Target;
-            if (x != null && (x.ObjectKind == ObjectKind.Housing || x.ObjectKind == ObjectKind.EventObj) && x.IsTargetable
+            if (x != null && (x.ObjectKind == ObjectKind.HousingEventObject || x.ObjectKind == ObjectKind.EventObj) && x.IsTargetable
                 && x.Name.ToString().EqualsIgnoreCaseAny(BellName, "リテイナーベル") && !IsOccupied()
-                && Vector3.Distance(x.Position, Svc.ClientState.LocalPlayer!.Position) < GetValidInteractionDistance(x)
+                && Vector3.Distance(x.Position, Svc.Objects.LocalPlayer!.Position) < GetValidInteractionDistance(x)
                 && RestockService.GenericThrottle && EzThrottler.Throttle("InteractWithBell", 1000))
             {
                 TargetSystem.Instance()->OpenObjectInteraction((GameObject*)x.Address);
@@ -400,32 +394,32 @@ namespace InventoryTools.Services
                 for (int i = 0; i < InventoryManager.Instance()->GetInventoryContainer(inv)->Size; i++)
                 {
                     var item = InventoryManager.Instance()->GetInventoryContainer(inv)->GetInventorySlot(i);
-                    if (item->ItemId == ItemId && (lookingForHQ && item->Flags == InventoryItem.ItemFlags.HighQuality || !lookingForHQ))
+                    if (item->ItemId == ItemId && ((lookingForHQ && item->Flags == InventoryItem.ItemFlags.HighQuality) || (!lookingForHQ)))
                     {
                         quantity = item->Quantity;
                         var ag = AgentInventoryContext.Instance();
                         ag->OpenForItemSlot(inv, i, 0, AgentModule.Instance()->GetAgentByInternalId(AgentId.Retainer)->GetAddonId());
                         var contextMenu = (AtkUnitBase*)Svc.GameGui.GetAddonByName("ContextMenu", 1).Address;
+                        var contextAgent = AgentInventoryContext.Instance();
+                        var indexOfRetrieveAll = -1;
+                        var indexOfRetrieveQuantity = -1;
+
+                        int looper = 0;
+                        foreach (var contextObj in contextAgent->EventParams)
+                        {
+                            if (contextObj.Type == AtkValueType.String)
+                            {
+                                var label = MemoryHelper.ReadSeStringNullTerminated(new IntPtr(contextObj.String));
+
+                                if (Svc.Data.GetExcelSheet<Addon>().GetRow(98).Text == label.TextValue) indexOfRetrieveAll = looper;
+                                if (Svc.Data.GetExcelSheet<Addon>().GetRow(773).Text == label.TextValue) indexOfRetrieveQuantity = looper;
+
+                                looper++;
+                            }
+                        }
+
                         if (contextMenu != null)
                         {
-                            var contextAgent = AgentInventoryContext.Instance();
-                            var indexOfRetrieveAll = -1;
-                            var indexOfRetrieveQuantity = -1;
-
-                            int looper = 0;
-                            foreach (var contextObj in contextAgent->EventParams)
-                            {
-                                if (contextObj.Type == FFXIVClientStructs.FFXIV.Component.GUI.ValueType.String)
-                                {
-                                    var label = MemoryHelper.ReadSeStringNullTerminated(new nint(contextObj.String));
-
-                                    if (Svc.Data.GetExcelSheet<Addon>().GetRow(98).Text == label.TextValue) indexOfRetrieveAll = looper;
-                                    if (Svc.Data.GetExcelSheet<Addon>().GetRow(773).Text == label.TextValue) indexOfRetrieveQuantity = looper;
-
-                                    looper++;
-                                }
-                            }
-
                             if (item->Quantity == 1 || item->ItemId <= 19)
                             {
                                 if (indexOfRetrieveAll == -1) return true;
@@ -480,7 +474,7 @@ namespace InventoryTools.Services
                 if (entry != null)
                 {
                     var index = GetEntries(addon).IndexOf(entry);
-                    if (index >= 0 && IsSelectItemEnabled(addon, index) && RestockService.GenericThrottle)
+                    if (index >= 0 && RestockService.GenericThrottle)
                     {
                         new AddonMaster.SelectString((nint)addon).Entries[(ushort)index].Select();
                         return true;
@@ -492,15 +486,6 @@ namespace InventoryTools.Services
                 RestockService.RethrottleGeneric();
             }
             return false;
-        }
-
-        internal static bool IsSelectItemEnabled(AddonSelectString* addon, int index)
-        {
-            var step1 = (AtkTextNode*)addon->AtkUnitBase
-                        .UldManager.NodeList[2]
-                        ->GetComponent()->UldManager.NodeList[index + 1]
-                        ->GetComponent()->UldManager.NodeList[3];
-            return GenericHelpers.IsSelectItemEnabled(step1);
         }
 
         internal static List<string> GetEntries(AddonSelectString* addon)
