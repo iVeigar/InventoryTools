@@ -14,7 +14,7 @@ using Microsoft.Extensions.Hosting;
 
 public class HostedCraftMonitor : CraftMonitor, IHostedService
 {
-    public HostedCraftMonitor(IGameUiManager gameUiManager, RecipeSheet recipeSheet, IClientState clientState, IFramework framework, IPluginLog pluginLog, ClassJobService classJobService, ExcelSheet<GathererCrafterLvAdjustTable> adjustSheet, RecipeLevelTableSheet recipeLevelTableSheet) : base(gameUiManager, recipeSheet, clientState, framework, pluginLog, classJobService, adjustSheet, recipeLevelTableSheet)
+    public HostedCraftMonitor(IGameUiManager gameUiManager, RecipeSheet recipeSheet, IObjectTable objectTable, IClientState clientState, IFramework framework, IPluginLog pluginLog, ClassJobService classJobService, ExcelSheet<GathererCrafterLvAdjustTable> adjustSheet, RecipeLevelTableSheet recipeLevelTableSheet) : base(gameUiManager, recipeSheet, objectTable, clientState, framework, pluginLog, classJobService, adjustSheet, recipeLevelTableSheet)
     {
     }
 

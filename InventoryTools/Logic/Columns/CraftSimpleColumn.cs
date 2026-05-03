@@ -105,29 +105,26 @@ namespace InventoryTools.Logic.Columns
                     ImGui.Image(ImGuiService.GetIconTexture(Icons.MarketboardIcon).Handle, new Vector2(16,16));
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
                     {
-                        using (var tooltip = ImRaii.Tooltip())
+                        using (ImRaii.Tooltip())
                         {
-                            if (tooltip.Success)
+                            var totalAvailable = 0;
+                            foreach (var price in craftPrices)
                             {
-                                var totalAvailable = 0;
-                                foreach (var price in craftPrices)
+                                var world = _worldSheet.GetRowOrDefault(price.WorldId);
+                                if (world != null)
                                 {
-                                    var world = _worldSheet.GetRowOrDefault(price.WorldId);
-                                    if (world != null)
-                                    {
-                                        ImGui.Text(price.Left + " available at " + price.UnitPrice +
-                                                   (price.IsHq ? " (HQ)" : "") + " (" + world.Value.Name.ExtractText() + ")");
-                                    }
-
-                                    totalAvailable += price.Left;
+                                    ImGui.Text(price.Left + " available at " + price.UnitPrice +
+                                               (price.IsHq ? " (HQ)" : "") + " (" + world.Value.Name.ExtractText() + ")");
                                 }
 
-                                ImGui.Text("Available: " + totalAvailable);
+                                totalAvailable += price.Left;
+                            }
 
-                                if (searchResult.CraftItem.MarketAvailable != searchResult.CraftItem.QuantityNeeded)
-                                {
-                                    ImGui.Text("Missing: " + (searchResult.CraftItem.QuantityNeeded - searchResult.CraftItem.MarketAvailable));
-                                }
+                            ImGui.Text("Available: " + totalAvailable);
+
+                            if (searchResult.CraftItem.MarketAvailable != searchResult.CraftItem.QuantityNeeded)
+                            {
+                                ImGui.Text("Missing: " + (searchResult.CraftItem.QuantityNeeded - searchResult.CraftItem.MarketAvailable));
                             }
                         }
                     }

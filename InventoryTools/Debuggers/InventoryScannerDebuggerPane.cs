@@ -596,6 +596,10 @@ public class InventoryScannerDebuggerPane : IDebugPane
             InventoryType.HousingInteriorPlacedItems6,
             InventoryType.HousingInteriorPlacedItems7,
             InventoryType.HousingInteriorPlacedItems8,
+            InventoryType.HousingInteriorPlacedItems9,
+            InventoryType.HousingInteriorPlacedItems10,
+            InventoryType.HousingInteriorPlacedItems11,
+            InventoryType.HousingInteriorPlacedItems12,
             InventoryType.HousingInteriorStoreroom1,
             InventoryType.HousingInteriorStoreroom2,
             InventoryType.HousingInteriorStoreroom3,
@@ -604,10 +608,15 @@ public class InventoryScannerDebuggerPane : IDebugPane
             InventoryType.HousingInteriorStoreroom6,
             InventoryType.HousingInteriorStoreroom7,
             InventoryType.HousingInteriorStoreroom8,
+            InventoryType.HousingInteriorStoreroom9,
+            InventoryType.HousingInteriorStoreroom10,
+            InventoryType.HousingInteriorStoreroom11,
             InventoryType.HousingExteriorAppearance,
             InventoryType.HousingInteriorAppearance,
             InventoryType.HousingExteriorPlacedItems,
+            InventoryType.HousingExteriorPlacedItems2,
             InventoryType.HousingExteriorStoreroom,
+            InventoryType.HousingExteriorStoreroom2,
         };
 
         if (ImGui.TreeNode("Housing Inventories"))

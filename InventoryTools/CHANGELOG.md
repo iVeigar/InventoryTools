@@ -8,6 +8,56 @@ Instead the changelog reader and automation surrounding plugin PRs will add the 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.html).
 
+## [15.0.0] - 2026-05-02
+
+### Changed
+- API15 update
+- Data update for 7.5
+- Now parses the extra items from the armoire + housing
+
+## [14.1.3] - 2026-04-26
+
+### Added
+- Added unlocked/completed to instances compendium listing/view
+- Added Relic Tools, Relic Weapons to the compendium and as uses to the source/use system
+- Added Custom Delivery NPCs to the compendium
+
+### Changed
+- Lumina Supplemental data update
+
+### Fixed
+- Fixed how certain names are displayed in languages other than english
+
+## [14.1.2] - 2026-03-19
+
+### Added
+- Added new compendium entries for BGM/Orchestrions, Mounts and Minions
+- Quest Compendium entries will now list if they are completed and also include a link to the corresponding consolegameswiki entry
+
+### Fixed
+- Fixed a bug where retainer market items would sometimes not be updated correctly
+- Fixed an issue where craft pricing would only work correctly once the craft list's pricing settings were edited
+- Fixed an issue when right clicking an item in the glamour chests creation window's where it'd bring up the wrong item
+- Fixed an issue where it was possible for the left/right arrows to be eaten by the plugin
+
+## [14.1.1] - 2026-03-19
+
+### Added
+ - Achievements, Leves, Airships, Dungeons, Gearsets, Quests, Submarines sources/uses now display a "Compendium Entries" list when right clicked. This will take you to the related view window for the related entry.
+ - Chocobo Item and Chocobo Racing Items were added to the compendium
+
+## [14.1.0] - 2026-03-16
+
+### Added
+- First release of the new Compendium system
+  - A in-game encyclopedia/compendium system was added, allowing players to browse and view detailed information about the game including the following (quests, items, NPCs, duties, leves, classes, achievements, allied societies, airship/submarine routes, gearsets, shared models, and territories) and with more to be added.
+  - Wotsit integration to allow you to access each of the compendium listings easily
+  - This is technically a beta but as it is segregated from the rest of the plugin, it's being released directly to live
+  - More compendium types will be added with future releases
+  - If there's something you'd like to see implemented please submit an issue or hit up the Allagan Tools plugin help forum post!
+
+- Vendors that have submenus should highlight correctly
+
 ## [14.0.7] - 2026-03-04
 
 ### Fixed

@@ -98,12 +98,9 @@ public class InventoryScopePicker
 
         var changed = false;
         var fakeRef = searchScopes.Count + " scopes defined.";
-        using (var disabled = ImRaii.Disabled())
+        using (ImRaii.Disabled())
         {
-            if (disabled)
-            {
-                ImGui.InputText(label, ref fakeRef, 200);
-            }
+            ImGui.InputText(label, ref fakeRef, 200);
         }
 
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))

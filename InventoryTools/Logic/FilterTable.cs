@@ -178,8 +178,7 @@ namespace InventoryTools.Logic
                         {
                             font.Pop();
                             color.Pop();
-                            using var tooltip = ImRaii.Tooltip();
-                            if (tooltip)
+                            using (ImRaii.Tooltip())
                             {
                                 ImGui.Text("Extra Filters");
                                 ImGui.Text("Right Click: Clear All");

@@ -877,12 +877,9 @@ namespace InventoryTools.Ui
                 ImGui.Image(this.ImGuiService.GetIconTexture(Icons.MannequinIcon).Handle, new Vector2(16,16));
                 if (ImGui.IsItemHovered())
                 {
-                    using (var tooltip = ImRaii.Tooltip())
+                    using (ImRaii.Tooltip())
                     {
-                        if (tooltip)
-                        {
-                            ImGui.TextUnformatted("This item has been combined into a single glamour ready item.");
-                        }
+                        ImGui.TextUnformatted("This item has been combined into a single glamour ready item.");
                     }
                 }
             }

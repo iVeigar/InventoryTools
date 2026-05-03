@@ -19,14 +19,11 @@ public class QueueDebuggerPane : IDebugPane
     {
         foreach (var taskQueue in _backgroundTaskCollector.BackgroundTaskQueues)
         {
-            using (var group = ImRaii.Group())
+            using (ImRaii.Group())
             {
-                if (group)
-                {
-                    ImGui.Text(taskQueue.QueueName);
-                    ImGui.SameLine();
-                    ImGui.Text(taskQueue.QueueCount.ToString());
-                }
+                ImGui.Text(taskQueue.QueueName);
+                ImGui.SameLine();
+                ImGui.Text(taskQueue.QueueCount.ToString());
             }
         }
     }

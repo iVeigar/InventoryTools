@@ -346,13 +346,10 @@ public class EquipmentSuggestWindow : GenericWindow, IMenuWindow
 
                         if (ImGui.IsItemHovered())
                         {
-                            using (var tooltip = ImRaii.Tooltip())
+                            using (ImRaii.Tooltip())
                             {
-                                if (tooltip.Success)
-                                {
-                                    ImGui.Text(
-                                        "Hitting this will pick the highest iLvl items while also factoring in the relevant stats for the seleted class/item.");
-                                }
+                                ImGui.Text(
+                                    "Hitting this will pick the highest iLvl items while also factoring in the relevant stats for the seleted class/item.");
                             }
                         }
                     }

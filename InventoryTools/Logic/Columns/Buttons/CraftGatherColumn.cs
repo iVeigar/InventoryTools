@@ -210,33 +210,30 @@ namespace InventoryTools.Logic.Columns.Buttons
 
                     if (ImGui.IsItemHovered())
                     {
-                        using (var tooltip = ImRaii.Tooltip())
+                        using (ImRaii.Tooltip())
                         {
-                            if (tooltip.Success)
+                            var pointsWithUpTimes = searchResult.Item.GatheringPoints.Where(c => c.GatheringPointTransient.GetGatheringUptime() != null).DistinctBy(c => c.GatheringPointTransient.GetGatheringUptime());
+                            foreach (var nextUptime in pointsWithUpTimes.Select(row => (row, row.GatheringPointTransient.GetGatheringUptime()!.Value.NextUptime(_seTime.ServerTime))).Where(c => !c.Item2.Equals(TimeInterval.Always) && !c.Item2.Equals(TimeInterval.Invalid) && !c.Item2.Equals(TimeInterval.Never)).OrderBy(c => c.Item2))
                             {
-                                var pointsWithUpTimes = searchResult.Item.GatheringPoints.Where(c => c.GatheringPointTransient.GetGatheringUptime() != null).DistinctBy(c => c.GatheringPointTransient.GetGatheringUptime());
-                                foreach (var nextUptime in pointsWithUpTimes.Select(row => (row, row.GatheringPointTransient.GetGatheringUptime()!.Value.NextUptime(_seTime.ServerTime))).Where(c => !c.Item2.Equals(TimeInterval.Always) && !c.Item2.Equals(TimeInterval.Invalid) && !c.Item2.Equals(TimeInterval.Never)).OrderBy(c => c.Item2))
+                                var map = _mapSheet.GetRow(nextUptime.row.Base.TerritoryType.Value.Map.RowId);
+                                ImGui.Text(map.FormattedName + ": ");
+                                ImGui.SameLine();
+                                if (nextUptime.Item2.Start > TimeStamp.UtcNow)
                                 {
-                                    var map = _mapSheet.GetRow(nextUptime.row.Base.TerritoryType.Value.Map.RowId);
-                                    ImGui.Text(map.FormattedName + ": ");
-                                    ImGui.SameLine();
-                                    if (nextUptime.Item2.Start > TimeStamp.UtcNow)
+                                    using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
                                     {
-                                        using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.DalamudRed))
-                                        {
-                                            ImGui.Text( " (Up in " +
-                                                        TimeInterval.DurationString(nextUptime.Item2.Start, TimeStamp.UtcNow,
-                                                            true) + ")");
-                                        }
+                                        ImGui.Text( " (Up in " +
+                                                    TimeInterval.DurationString(nextUptime.Item2.Start, TimeStamp.UtcNow,
+                                                        true) + ")");
                                     }
-                                    else
+                                }
+                                else
+                                {
+                                    using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.HealerGreen))
                                     {
-                                        using (ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.HealerGreen))
-                                        {
-                                            ImGui.Text(" (Up for " +
-                                                       TimeInterval.DurationString(nextUptime.Item2.End, TimeStamp.UtcNow,
-                                                           true) + ")");
-                                        }
+                                        ImGui.Text(" (Up for " +
+                                                   TimeInterval.DurationString(nextUptime.Item2.End, TimeStamp.UtcNow,
+                                                       true) + ")");
                                     }
                                 }
                             }

@@ -31,6 +31,8 @@ using InventoryTools.Logic.Settings;
 using InventoryTools.Ui.Widgets;
 using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
+using InventoryTools.Compendium.Interfaces;
+using InventoryTools.Compendium.Windows;
 using InventoryTools.Lists;
 using InventoryTools.Logic.Columns;
 using InventoryTools.Logic.Filters;
@@ -72,6 +74,7 @@ namespace InventoryTools.Ui
         private readonly IKeyState _keyState;
         private readonly ItemSheet _itemSheet;
         private readonly IFramework _framework;
+        private readonly IEnumerable<ICompendiumType> _compendiumTypes;
         private IEnumerable<IMenuWindow> _menuWindows;
         private ThrottleDispatcher? _throttleDispatcher;
         private readonly RestockService _restockService;
@@ -103,6 +106,7 @@ namespace InventoryTools.Ui
             IKeyState keyState,
             ItemSheet itemSheet,
             IFramework framework,
+            IEnumerable<ICompendiumType> compendiumTypes,
             RestockService restockService) : base(logger, mediator, imGuiService, configuration, "Crafts Window")
         {
             _tableService = tableService;
@@ -129,6 +133,7 @@ namespace InventoryTools.Ui
             _keyState = keyState;
             _itemSheet = itemSheet;
             _framework = framework;
+            _compendiumTypes = compendiumTypes.Where(c => c.ShowInListing).OrderBy(c => c.Plural);
             _restockService = restockService;
             Flags = ImGuiWindowFlags.MenuBar;
         }
@@ -632,13 +637,10 @@ namespace InventoryTools.Ui
 
                                 if (ImGui.IsItemHovered())
                                 {
-                                    using (var tooltip = ImRaii.Tooltip())
+                                    using (ImRaii.Tooltip())
                                     {
-                                        if (tooltip)
-                                        {
-                                            ImGui.TextUnformatted(
-                                                "This will paste the contents of items copied via the 'Copy List Contents' menu above, it also will attempt to parse Teamcraft lists if one is in your clipboard. If you have a garland tools URL in your clipboard that points to a group, it will also attempt to parse that add it to your craft list.");
-                                        }
+                                        ImGui.TextUnformatted(
+                                            "This will paste the contents of items copied via the 'Copy List Contents' menu above, it also will attempt to parse Teamcraft lists if one is in your clipboard. If you have a garland tools URL in your clipboard that points to a group, it will also attempt to parse that add it to your craft list.");
                                     }
                                 }
 
@@ -1691,6 +1693,33 @@ namespace InventoryTools.Ui
                                     }
                                 }
                             }
+                        }
+                    }
+
+                    using (var menu = ImRaii.Menu("Compendium"))
+                    {
+                        if (menu)
+                        {
+                            if (ImGui.Selectable("Compendium Viewer"))
+                            {
+                                this.MediatorService.Publish(new OpenGenericWindowMessage(typeof(CompendiumTypesWindow)));
+                            }
+                            ImGui.Separator();
+                            foreach (var compendiumType in _compendiumTypes)
+                            {
+                                if (compendiumType.ShowInListing && ImGui.MenuItem(compendiumType.Plural))
+                                {
+                                    this.MediatorService.Publish(new ToggleCompendiumListMessage(compendiumType));
+                                }
+                            }
+                        }
+                    }
+
+                    if (ImGui.IsItemHovered())
+                    {
+                        using (ImRaii.Tooltip())
+                        {
+                            ImGui.Text("Compendium is a WIP feature, expect more here soon!");
                         }
                     }
 

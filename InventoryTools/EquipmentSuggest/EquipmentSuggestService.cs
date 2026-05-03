@@ -21,6 +21,7 @@ public class EquipmentSuggestService
     private readonly ClassJobSheet _classJobSheet;
     private readonly ClassJobCategorySheet _classJobCategorySheet;
     private readonly InventoryToolsConfiguration _configuration;
+    private readonly IObjectTable _objectTable;
 
     public const uint StrengthId = 1;
     public const uint DexterityId = 2;
@@ -40,7 +41,8 @@ public class EquipmentSuggestService
         Lazy<EquipmentSuggestGrid> equipmentSuggestGrid, EquipmentSuggestSourceTypeField typeField,
         EquipmentSuggestModeSetting modeSetting, IClientState clientState,
         EquipmentSuggestClassJobFormField classJobField, ClassJobSheet classJobSheet,
-        ClassJobCategorySheet classJobCategorySheet, InventoryToolsConfiguration configuration)
+        ClassJobCategorySheet classJobCategorySheet, InventoryToolsConfiguration configuration,
+        IObjectTable objectTable)
     {
         _levelField = levelField;
         _config = config;
@@ -52,11 +54,12 @@ public class EquipmentSuggestService
         _classJobSheet = classJobSheet;
         _classJobCategorySheet = classJobCategorySheet;
         _configuration = configuration;
+        _objectTable = objectTable;
     }
 
     public void UseCurrentClassLevel()
     {
-        var activeCharacter = _clientState.LocalPlayer;
+        var activeCharacter = _objectTable.LocalPlayer;
         if (activeCharacter != null)
         {
             var currentMode = _modeSetting.CurrentValue(_configuration);

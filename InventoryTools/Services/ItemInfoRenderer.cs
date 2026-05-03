@@ -19,6 +19,7 @@ using FFXIVClientStructs.FFXIV.Client.UI.Agent;
 using FFXIVClientStructs.FFXIV.Common.Math;
 using Humanizer;
 using Dalamud.Bindings.ImGui;
+using InventoryTools.Compendium.Services;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 using InventoryTools.Extensions;
@@ -43,6 +44,7 @@ public class ItemInfoRenderService : IDisposable
     private readonly IFont _font;
     private readonly IKeyState _keyState;
     private readonly IFramework _framework;
+    private readonly ICompendiumTypeFactory _compendiumTypeFactory;
     private readonly Dictionary<Type,IItemInfoRenderer> _sourceRenderers;
     private readonly Dictionary<Type,IItemInfoRenderer> _useRenderers;
     private readonly Dictionary<ItemInfoType,IItemInfoRenderer> _sourceRenderersByItemInfoType;
@@ -51,7 +53,8 @@ public class ItemInfoRenderService : IDisposable
     public ItemInfoRenderService(IEnumerable<IItemInfoRenderer> itemRenderers,
         SourceIconGroupingSetting sourceIconGroupingSetting, UseIconGroupingSetting useIconGroupingSetting,
         ImGuiService imGuiService, IPluginLog pluginLog, InventoryToolsConfiguration configuration,
-        IClipboardService clipboardService, ImGuiTooltipService tooltipService, IFont font, IKeyState keyState, IFramework framework)
+        IClipboardService clipboardService, ImGuiTooltipService tooltipService, IFont font, IKeyState keyState, IFramework framework,
+        ICompendiumTypeFactory compendiumTypeFactory)
     {
         _sourceIconGroupingSetting = sourceIconGroupingSetting;
         _useIconGroupingSetting = useIconGroupingSetting;
@@ -63,6 +66,7 @@ public class ItemInfoRenderService : IDisposable
         _font = font;
         _keyState = keyState;
         _framework = framework;
+        _compendiumTypeFactory = compendiumTypeFactory;
         var itemInfoRenderers = itemRenderers.ToList();
         _sourceRenderers = itemInfoRenderers.Where(c => c.RendererType == RendererType.Source).ToDictionary(c => c.ItemSourceType, c => c);
         _useRenderers = itemInfoRenderers.Where(c => c.RendererType == RendererType.Use).ToDictionary(c => c.ItemSourceType, c => c);
@@ -84,11 +88,22 @@ public class ItemInfoRenderService : IDisposable
 
     private bool _scrollLeft;
     private bool _scrollRight;
-    private bool _inTooltip;
+
+    private DateTime? _lastTooltipTime;
+    private static readonly TimeSpan TooltipTimeout = TimeSpan.FromSeconds(2);
+
+    private bool InTooltip(DateTime now)
+    {
+        if (_lastTooltipTime == null)
+        {
+            return false;
+        }
+        return now - _lastTooltipTime < TooltipTimeout;
+    }
 
     private void CheckKeys(IFramework framework)
     {
-        if (_inTooltip)
+        if (InTooltip(framework.LastUpdate))
         {
             if (_keyState[VirtualKey.LEFT])
             {
@@ -154,6 +169,10 @@ public class ItemInfoRenderService : IDisposable
                 return "Shops";
             case ItemInfoRenderCategory.House:
                 return "Housing";
+            case ItemInfoRenderCategory.RelicWeapon:
+                return "Relic Weapon";
+            case ItemInfoRenderCategory.RelicTool:
+                return "Relic Tool";
         }
 
         return renderCategory.ToString().Titleize();
@@ -314,6 +333,30 @@ public class ItemInfoRenderService : IDisposable
     {
         var sourceRenderer = this._sourceRenderers.ContainsKey(itemSource.GetType()) ? this._sourceRenderers[itemSource.GetType()] : null;
         return sourceRenderer?.GetName(itemSource) ?? itemSource.Item.NameString;
+    }
+
+    public (Type, uint)? GetRelatedSourceType(ItemSource itemSource)
+    {
+        var sourceRenderer = this._sourceRenderers.ContainsKey(itemSource.GetType()) ? this._sourceRenderers[itemSource.GetType()] : null;
+        return sourceRenderer?.RelatedType?.Invoke(itemSource);
+    }
+
+    public List<(Type, uint)>? GetRelatedSourceTypes(ItemSource itemSource)
+    {
+        var sourceRenderer = this._sourceRenderers.ContainsKey(itemSource.GetType()) ? this._sourceRenderers[itemSource.GetType()] : null;
+        return sourceRenderer?.RelatedTypes?.Invoke(itemSource);
+    }
+
+    public (Type, uint)? GetRelatedUseType(ItemSource itemSource)
+    {
+        var useRenderer = this._useRenderers.ContainsKey(itemSource.GetType()) ? this._useRenderers[itemSource.GetType()] : null;
+        return useRenderer?.RelatedType?.Invoke(itemSource);
+    }
+
+    public List<(Type, uint)>? GetRelatedUseTypes(ItemSource itemSource)
+    {
+        var useRenderer = this._useRenderers.ContainsKey(itemSource.GetType()) ? this._useRenderers[itemSource.GetType()] : null;
+        return useRenderer?.RelatedTypes?.Invoke(itemSource);
     }
 
     public string GetSourceDescription(ItemSource itemSource)
@@ -601,7 +644,7 @@ public class ItemInfoRenderService : IDisposable
 
         if (!ImGui.IsAnyItemHovered())
         {
-            _inTooltip = false;
+            _lastTooltipTime = null;
             _scrollLeft = false;
             _scrollRight = false;
             _itemTooltipIndex = 0;
@@ -814,6 +857,49 @@ public class ItemInfoRenderService : IDisposable
                         _clipboardService.CopyToClipboard(clipboardText);
                     }
                 }
+
+                var relatedTypes = itemSources.Select(c => rendererType == RendererType.Source ? (c, this.GetRelatedSourceType(c)) : (c, this.GetRelatedUseType(c))).Where(c => c.Item2 != null).GroupBy(c => c.Item2.Value.Item1).ToList();
+                if (relatedTypes.Count > 0)
+                {
+                    ImGui.NewLine();
+                    ImGui.Text("Compendium Entries");
+                    ImGui.Separator();
+
+                    foreach (var relatedGroup in relatedTypes)
+                    {
+                        var compendiumType = _compendiumTypeFactory.GetByType(relatedGroup.Key);
+                        if (compendiumType != null)
+                        {
+                            var compendiumIcon = compendiumType.Icon;
+                            this._imGuiService.DrawIcon(compendiumIcon, new Vector2(16, 16));
+                            ImGui.SameLine();
+                            using (var menu = ImRaii.Menu(relatedGroup.Count() == 1 ? compendiumType.Singular : compendiumType.Plural))
+                            {
+                                if (menu)
+                                {
+                                    foreach (var relatedType in relatedGroup)
+                                    {
+                                        var rowId = relatedType.Item2!.Value.Item2;
+                                        var newId = compendiumType.RemapType(relatedType.Item2!.Value.Item1, rowId);
+                                        if (newId != null)
+                                        {
+                                            rowId = newId.Value;
+                                        }
+                                        if (compendiumType.HasRow(rowId))
+                                        {
+                                            var name = compendiumType.GetName(rowId);
+                                            if (ImGui.MenuItem(name))
+                                            {
+                                                messages.Add(new OpenCompendiumViewMessage(compendiumType, rowId));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                }
             }
         }
 
@@ -834,10 +920,9 @@ public class ItemInfoRenderService : IDisposable
 
         if ((hasTooltip || hasGroupedTooltip) && ImGui.IsItemHovered())
         {
-            _inTooltip = true;
+            _lastTooltipTime = _framework.LastUpdate;
             ImGui.SetNextWindowSizeConstraints( new System.Numerics.Vector2(250, -1), new System.Numerics.Vector2(1000,1000));
-            using var tt = ImRaii.Tooltip();
-            if (tt.Success)
+            using (ImRaii.Tooltip())
             {
                 if (itemSources.Count > 1)
                 {
@@ -941,9 +1026,8 @@ public class ItemInfoRenderService : IDisposable
         }
         else if(ImGui.IsItemHovered())
         {
-            _inTooltip = true;
-            using var tt = ImRaii.Tooltip();
-            if (tt.Success)
+            _lastTooltipTime = _framework.LastUpdate;
+            using (ImRaii.Tooltip())
             {
                 ImGui.Text("No tooltip configured for " + (rendererType == RendererType.Source
                     ? this.GetSourceTypeName(firstItem.GetType())

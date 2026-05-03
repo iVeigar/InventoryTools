@@ -10,14 +10,14 @@ namespace InventoryTools.Logic.Filters
 {
     public class AcquiredFilter : BooleanFilter
     {
-        private readonly IClientState _clientState;
         private readonly InventoryToolsConfiguration _configuration;
+        private readonly IPlayerState _playerState;
         private readonly IGameInterface _gameInterface;
 
-        public AcquiredFilter(ILogger<AcquiredFilter> logger, ImGuiService imGuiService, IClientState clientState, InventoryToolsConfiguration configuration) : base(logger, imGuiService)
+        public AcquiredFilter(ILogger<AcquiredFilter> logger, ImGuiService imGuiService, InventoryToolsConfiguration configuration, IPlayerState playerState) : base(logger, imGuiService)
         {
-            _clientState = clientState;
             _configuration = configuration;
+            _playerState = playerState;
         }
         public override string Key { get; set; } = "Acquired";
         public override string Name { get; set; } = "Is Acquired?";
@@ -43,7 +43,7 @@ namespace InventoryTools.Logic.Filters
             }
 
             var isUnlocked = false;
-            if(this._configuration.AcquiredItems.TryGetValue(_clientState.LocalContentId, out var value))
+            if(this._configuration.AcquiredItems.TryGetValue(_playerState.ContentId, out var value))
             {
                 if (value.Contains(item.RowId))
                 {

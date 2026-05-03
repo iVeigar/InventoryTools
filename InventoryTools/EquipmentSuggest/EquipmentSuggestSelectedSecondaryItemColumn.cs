@@ -67,47 +67,41 @@ public class EquipmentSuggestSelectedSecondaryItemColumn  : StringFormField<Equi
             }
             else
             {
-                using (var group = ImRaii.Group())
+                using (ImRaii.Group())
                 {
-                    if (group)
+                    if (ImGui.ImageButton(
+                            ImGuiService.GetIconTexture(item.SecondarySelectedItem.Item.Icon).Handle,
+                            new Vector2(iconSize, iconSize) * ImGui.GetIO().FontGlobalScale,
+                            new Vector2(0, 0), new Vector2(1, 1), 0))
                     {
-                        if (ImGui.ImageButton(
-                                ImGuiService.GetIconTexture(item.SecondarySelectedItem.Item.Icon).Handle,
-                                new Vector2(iconSize, iconSize) * ImGui.GetIO().FontGlobalScale,
-                                new Vector2(0, 0), new Vector2(1, 1), 0))
-                        {
-                            item.SecondarySelectedItem = null;
-                            return null;
-                        }
-                        if (ImGui.IsItemHovered())
-                        {
-                            ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
-                        }
-                        _tooltipService.DrawItemTooltip(item.SecondarySelectedItem);
+                        item.SecondarySelectedItem = null;
+                        return null;
+                    }
+                    if (ImGui.IsItemHovered())
+                    {
+                        ImGui.SetMouseCursor(ImGuiMouseCursor.Hand);
+                    }
+                    _tooltipService.DrawItemTooltip(item.SecondarySelectedItem);
 
-                        if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled & ImGuiHoveredFlags.AllowWhenOverlapped & ImGuiHoveredFlags.AllowWhenBlockedByPopup & ImGuiHoveredFlags.AllowWhenBlockedByActiveItem & ImGuiHoveredFlags.AnyWindow) && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
-                        {
-                            ImGui.OpenPopup("RightClickMenu");
-                        }
+                    if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled & ImGuiHoveredFlags.AllowWhenOverlapped & ImGuiHoveredFlags.AllowWhenBlockedByPopup & ImGuiHoveredFlags.AllowWhenBlockedByActiveItem & ImGuiHoveredFlags.AnyWindow) && ImGui.IsMouseReleased(ImGuiMouseButton.Right))
+                    {
+                        ImGui.OpenPopup("RightClickMenu");
+                    }
 
-                        using (var popup = ImRaii.Popup("RightClickMenu"))
+                    using (var popup = ImRaii.Popup("RightClickMenu"))
+                    {
+                        if (popup.Success)
                         {
-                            if (popup.Success)
-                            {
-                                messages.AddRange(ImGuiService.ImGuiMenuService.DrawRightClickPopup(item.SecondarySelectedItem));
-                            }
+                            messages.AddRange(ImGuiService.ImGuiMenuService.DrawRightClickPopup(item.SecondarySelectedItem));
                         }
                     }
                 }
                 ImGui.SameLine();
-                using (var group = ImRaii.Group())
+                using (ImRaii.Group())
                 {
-                    if (group)
-                    {
-                        ImGui.PushTextWrapPos();
-                        ImGui.TextWrapped(item.SecondarySelectedItem.Item.NameString);
-                        ImGui.PopTextWrapPos();
-                    }
+                    ImGui.PushTextWrapPos();
+                    ImGui.TextWrapped(item.SecondarySelectedItem.Item.NameString);
+                    ImGui.PopTextWrapPos();
                 }
                 // using (var table = ImRaii.Table("ItemRow", 2, ImGuiTableFlags.BordersInnerV | ImGuiTableFlags.RowBg))
                 // {
@@ -218,7 +212,7 @@ public class EquipmentSuggestSelectedSecondaryItemColumn  : StringFormField<Equi
     }
 
     public override string HelpText { get; set; } = "The item you've selected from the list of recommendations";
-    public override string Version { get; } = "1.12.0.10";
+    public override string Version { get; set; } = "1.12.0.10";
 
     public string? CurrentValue(EquipmentSuggestItem item)
     {

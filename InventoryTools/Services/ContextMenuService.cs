@@ -22,7 +22,6 @@ using InventoryTools.Services.Interfaces;
 using InventoryTools.Ui;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace InventoryTools.Services;
 
@@ -48,7 +47,7 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
     public const int GatheringNoteContextItemId      = 160;
     public const int ItemSearchContextItemId         = 6192;
     public const int ChatLogContextMenuType          = ChatLogContextItemId + 8;
-    public const int ChatLogContextItemId            = 2392;
+    public const int ChatLogContextItemId            = 2496;
     public const int AgentMiragePrismPrismItemDetailId = 84;
 
     public const int SubmarinePartsMenuContextItemId            = 84;
@@ -243,7 +242,7 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
 
     }
 
-    private uint? GetGameObjectItemId(IMenuOpenedArgs args)
+    private unsafe uint? GetGameObjectItemId(IMenuOpenedArgs args)
     {
         uint? item;
 
@@ -254,6 +253,20 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
             if (item == null)
             {
                 item = GetObjectItemId(args.AgentPtr, ItemSearchContextItemId);
+            }
+        }
+        else if (args.AddonName == "MiragePrismPrismBoxCrystallize")
+        {
+            var itemDetail = AgentInterfaceById(AgentId.ItemDetail);
+            if (itemDetail != null && itemDetail->IsAgentActive())
+            {
+                AgentItemDetail* agentItemDetail = (AgentItemDetail*)itemDetail;
+                item = agentItemDetail->ItemId;
+            }
+            else
+            {
+                item = GetObjectItemId(AgentById(AgentId.MiragePrismPrismItemDetail),
+                    AgentMiragePrismPrismItemDetailId);
             }
         }
         else
@@ -274,7 +287,6 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
                 "RecipeProductList" => GetObjectItemId(AgentById(AgentId.RecipeItemContext), AgentItemContextItemId),
                 "GatheringNote" => GetObjectItemId("GatheringNote", GatheringNoteContextItemId),
                 "ChatLog" => GetObjectItemId("ChatLog", ChatLogContextItemId),
-                "MiragePrismPrismBoxCrystallize" => GetObjectItemId(AgentById(AgentId.MiragePrismPrismItemDetail), AgentMiragePrismPrismItemDetailId),
                 _ => null,
             };
         }
@@ -308,17 +320,17 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
         if (addonPtr == IntPtr.Zero) return null;
         var addon = (AtkUnitBase*)addonPtr.Address;
         var atkValue = addon->AtkValues[aktValue];
-        if (atkValue.Type is ValueType.Null or ValueType.Undefined)
+        if (atkValue.Type is AtkValueType.Null or AtkValueType.Undefined)
         {
             return null;
         }
 
-        if (atkValue.Type is ValueType.Int)
+        if (atkValue.Type is AtkValueType.Int)
         {
             return (uint?)atkValue.Int;
         }
 
-        if (atkValue.Type is ValueType.UInt)
+        if (atkValue.Type is AtkValueType.UInt)
         {
             return atkValue.UInt;
         }
@@ -421,6 +433,14 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
         var agents   = uiModule->GetAgentModule();
         var agent    = agents->GetAgentByInternalId(id);
         return (IntPtr)agent;
+    }
+
+    private unsafe AgentInterface* AgentInterfaceById(AgentId id)
+    {
+        var uiModule = (UIModule*)_gameGui.GetUIModule().Address;
+        var agents   = uiModule->GetAgentModule();
+        var agent    = agents->GetAgentByInternalId(id);
+        return agent;
     }
 
     private void AddToNewCraftList(IMenuItemClickedArgs obj, uint? itemId = null)

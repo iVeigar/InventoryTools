@@ -393,12 +393,9 @@ public class CharacterScopePicker
 
         var changed = false;
         var fakeRef = searchScopes.Count + " items selected.";
-        using (var disabled = ImRaii.Disabled())
+        using (ImRaii.Disabled())
         {
-            if (disabled)
-            {
-                ImGui.InputText(label, ref fakeRef, 200);
-            }
+            ImGui.InputText(label, ref fakeRef, 200);
         }
 
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.AllowWhenDisabled))

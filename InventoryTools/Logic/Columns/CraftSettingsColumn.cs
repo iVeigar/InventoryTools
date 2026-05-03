@@ -197,19 +197,15 @@ public class CraftSettingsColumn : IColumn
 
         if (ImGui.IsItemHovered())
         {
-            using (var tooltip = ImRaii.Tooltip())
+            using (ImRaii.Tooltip())
             {
-                if (tooltip.Success)
+                ImGui.TextUnformatted("Sourcing: " + (ingredientPreferenceDefault != null ? _ingredientPreferenceLocalizer.FormattedName(ingredientPreferenceDefault) : "Use Default"));
+                ImGui.TextUnformatted("Retainer: " + (perItemRetainerRetrieval?.FormattedName() ?? "Use Default"));
+                ImGui.TextUnformatted("Zone: " + (zonePreference != null ? _mapSheet.GetRowOrDefault(zonePreference.Value)?.FormattedName ?? "Use Default" : "Use Default"));
+                if (searchResult.Item.CanBePlacedOnMarket)
                 {
-
-                    ImGui.TextUnformatted("Sourcing: " + (ingredientPreferenceDefault != null ? _ingredientPreferenceLocalizer.FormattedName(ingredientPreferenceDefault) : "Use Default"));
-                    ImGui.TextUnformatted("Retainer: " + (perItemRetainerRetrieval?.FormattedName() ?? "Use Default"));
-                    ImGui.TextUnformatted("Zone: " + (zonePreference != null ? _mapSheet.GetRowOrDefault(zonePreference.Value)?.FormattedName ?? "Use Default" : "Use Default"));
-                    if (searchResult.Item.CanBePlacedOnMarket)
-                    {
-                        ImGui.TextUnformatted("Market World Preference: " + (worldPreference != null ? _worldSheet.GetRowOrDefault(worldPreference.Value)?.Name.ExtractText() ?? "Use Default" : "Use Default"));
-                        ImGui.TextUnformatted("Market Price Override: " + (priceOverride != null ? priceOverride.Value.ToString("N0") : "Use Default"));
-                    }
+                    ImGui.TextUnformatted("Market World Preference: " + (worldPreference != null ? _worldSheet.GetRowOrDefault(worldPreference.Value)?.Name.ExtractText() ?? "Use Default" : "Use Default"));
+                    ImGui.TextUnformatted("Market Price Override: " + (priceOverride != null ? priceOverride.Value.ToString("N0") : "Use Default"));
                 }
             }
         }
@@ -230,14 +226,11 @@ public class CraftSettingsColumn : IColumn
                     : new Vector4(1f, 1f, 1f, 1f));
             if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
             {
-                using (var tt = ImRaii.Tooltip())
+                using (ImRaii.Tooltip())
                 {
-                    if (tt)
-                    {
-                        ImGui.Text("Retainer Retrieval: ");
-                        ImGui.Separator();
-                        ImGui.Text(retainerRetrieval.FormattedName() + (perItemRetainerRetrieval == null ? " (Default)" : ""));
-                    }
+                    ImGui.Text("Retainer Retrieval: ");
+                    ImGui.Separator();
+                    ImGui.Text(retainerRetrieval.FormattedName() + (perItemRetainerRetrieval == null ? " (Default)" : ""));
                 }
             }
             ImGui.SameLine();
@@ -249,14 +242,11 @@ public class CraftSettingsColumn : IColumn
                 new System.Numerics.Vector2(0, 0), new System.Numerics.Vector2(1, 1), new Vector4(1f, 1f, 1f, 0.2f));
             if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
             {
-                using (var tt = ImRaii.Tooltip())
+                using (ImRaii.Tooltip())
                 {
-                    if (tt)
-                    {
-                        ImGui.Text("Retainer Retrieval: ");
-                        ImGui.Separator();
-                        ImGui.Text(retainerRetrieval.FormattedName() + " (Default)");
-                    }
+                    ImGui.Text("Retainer Retrieval: ");
+                    ImGui.Separator();
+                    ImGui.Text(retainerRetrieval.FormattedName() + " (Default)");
                 }
             }
             ImGui.SameLine();
@@ -379,36 +369,33 @@ public class CraftSettingsColumn : IColumn
         }
         if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
         {
-            using (var tt = ImRaii.Tooltip())
+            using (ImRaii.Tooltip())
             {
-                if (tt)
+                ImGui.Text("Item Quality: ");
+                ImGui.Separator();
+                if (isCollectable)
                 {
-                    ImGui.Text("Item Quality: ");
-                    ImGui.Separator();
-                    if (isCollectable)
-                    {
-                        ImGui.Text("Collectable");
-                    }
-                    else if (hqRequired == true)
-                    {
-                        ImGui.Text("HQ Only (Overridden)");
-                    }
-                    else if (hqRequired == false)
-                    {
-                        ImGui.Text("NQ Only (Overridden)");
-                    }
-                    else if(canBeHq)
-                    {
-                        ImGui.Text(configuration.CraftList.HQRequired ? "HQ Only (List Default)" : "HQ/NQ (List Default)");
-                    }
-                    else
-                    {
-                        ImGui.Text("NQ Only (List Default)");
-                    }
-
-                    ImGui.Text(canBeHq ? "Can be HQ" : "Can't be HQ");
-                    ImGui.Text(isCollectable ? "Always Collectable" : "Can't be Collectable");
+                    ImGui.Text("Collectable");
                 }
+                else if (hqRequired == true)
+                {
+                    ImGui.Text("HQ Only (Overridden)");
+                }
+                else if (hqRequired == false)
+                {
+                    ImGui.Text("NQ Only (Overridden)");
+                }
+                else if(canBeHq)
+                {
+                    ImGui.Text(configuration.CraftList.HQRequired ? "HQ Only (List Default)" : "HQ/NQ (List Default)");
+                }
+                else
+                {
+                    ImGui.Text("NQ Only (List Default)");
+                }
+
+                ImGui.Text(canBeHq ? "Can be HQ" : "Can't be HQ");
+                ImGui.Text(isCollectable ? "Always Collectable" : "Can't be Collectable");
             }
         }
 

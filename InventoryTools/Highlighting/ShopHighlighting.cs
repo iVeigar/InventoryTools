@@ -7,7 +7,6 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Component.GUI;
 using Dalamud.Bindings.ImGui;
 using InventoryTools.Logic.Settings;
-using ValueType = FFXIVClientStructs.FFXIV.Component.GUI.ValueType;
 
 namespace InventoryTools.Highlighting;
 
@@ -183,7 +182,7 @@ public class ShopHighlighting : IDisposable
         for (var i = shopItemsAtkIndex; i < shopItemsAtkIndex + shopLength; i++)
         {
             var atkValue = atkUnitBase->AtkValues[i];
-            if (atkValue.Type != ValueType.UInt)
+            if (atkValue.Type != AtkValueType.UInt)
             {
                 break;
             }

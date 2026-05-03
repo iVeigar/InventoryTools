@@ -205,7 +205,7 @@ namespace InventoryTools.Logic.Filters
                                         continue;
                                     }
 
-                                    ImRaii.Color? pushColor = null;
+                                    ImRaii.ColorDisposable? pushColor = null;
                                     if (_selectedColumn == column.Value)
                                     {
                                         pushColor = ImRaii.PushColor(ImGuiCol.Text, ImGuiColors.HealerGreen);
@@ -237,10 +237,7 @@ namespace InventoryTools.Logic.Filters
                                         ImGuiUtil.HoverTooltip("Configurable");
                                     }
 
-                                    if (pushColor != null)
-                                    {
-                                        pushColor.Pop();
-                                    }
+                                    pushColor?.Pop();
 
                                     if (_selectedColumn == column.Value)
                                     {

@@ -172,12 +172,9 @@ namespace InventoryTools.Logic.Settings.Abstract
 
                 if (ImGui.IsItemHovered())
                 {
-                    using (var tooltip = ImRaii.Tooltip())
+                    using (ImRaii.Tooltip())
                     {
-                        if (tooltip)
-                        {
-                            ImGui.Text("Click to open colour selector.");
-                        }
+                        ImGui.Text("Click to open colour selector.");
                     }
                 }
             }

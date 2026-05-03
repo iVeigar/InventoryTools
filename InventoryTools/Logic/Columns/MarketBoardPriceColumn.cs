@@ -90,40 +90,37 @@ namespace InventoryTools.Logic.Columns
                     ImGui.Image(ImGuiService.GetIconTexture(Icons.MarketboardIcon).Handle, new Vector2(16, 16));
                     if (ImGui.IsItemHovered(ImGuiHoveredFlags.None))
                     {
-                        using (var tooltip = ImRaii.Tooltip())
+                        using (ImRaii.Tooltip())
                         {
-                            if (tooltip.Success)
+                            var selectedWorldId =
+                                MarketboardWorldSetting.SelectedWorldId(columnConfiguration, activeCharacter);
+                            var pricing = _marketCache.GetPricing(searchResult.Item.RowId, selectedWorldId, false);
+                            if (pricing is { recentHistory: null, listings: null })
                             {
-                                var selectedWorldId =
-                                    MarketboardWorldSetting.SelectedWorldId(columnConfiguration, activeCharacter);
-                                var pricing = _marketCache.GetPricing(searchResult.Item.RowId, selectedWorldId, false);
-                                if (pricing is { recentHistory: null, listings: null })
+                                ImGui.Text("No data available");
+                            }
+
+                            if (pricing is { listings: not null })
+                            {
+                                ImGui.Text("Listings: ");
+                                ImGui.Separator();
+
+                                foreach (var price in pricing.listings)
                                 {
-                                    ImGui.Text("No data available");
+                                    ImGui.Text(price.quantity + " available at " + price.pricePerUnit +
+                                               (price.hq ? " (HQ)" : ""));
                                 }
+                            }
 
-                                if (pricing is { listings: not null })
+                            if (pricing is { recentHistory: not null })
+                            {
+                                ImGui.Text("History: ");
+                                ImGui.Separator();
+
+                                foreach (var price in pricing.recentHistory)
                                 {
-                                    ImGui.Text("Listings: ");
-                                    ImGui.Separator();
-
-                                    foreach (var price in pricing.listings)
-                                    {
-                                        ImGui.Text(price.quantity + " available at " + price.pricePerUnit +
-                                                   (price.hq ? " (HQ)" : ""));
-                                    }
-                                }
-
-                                if (pricing is { recentHistory: not null })
-                                {
-                                    ImGui.Text("History: ");
-                                    ImGui.Separator();
-
-                                    foreach (var price in pricing.recentHistory)
-                                    {
-                                        ImGui.Text(price.quantity + " available at " + price.pricePerUnit +
-                                                   (price.hq ? " (HQ)" : ""));
-                                    }
+                                    ImGui.Text(price.quantity + " available at " + price.pricePerUnit +
+                                               (price.hq ? " (HQ)" : ""));
                                 }
                             }
                         }

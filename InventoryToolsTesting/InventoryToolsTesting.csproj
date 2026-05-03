@@ -1,4 +1,4 @@
-<Project Sdk="Dalamud.NET.Sdk/14.0.1">
+<Project Sdk="Dalamud.NET.Sdk/15.0.0">
     <PropertyGroup>
         <Use_DalamudPackager>false</Use_DalamudPackager>
         <OutputType>Exe</OutputType>
@@ -55,6 +55,10 @@
       <ProjectReference Include="..\InventoryToolsMock\InventoryToolsMock.csproj" />
       <ProjectReference Include="..\CriticalCommonLib\CriticalCommonLib.csproj" />
     </ItemGroup>
+
+    <PropertyGroup>
+        <NoWarn>$(NoWarn);Dalamud001</NoWarn>
+    </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="JunitXml.TestLogger" Version="7.1.0" />
