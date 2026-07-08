@@ -11,6 +11,7 @@ using InventoryTools.Logic.Filters.Abstract;
 using Dalamud.Interface.Utility.Raii;
 using InventoryTools.Extensions;
 using InventoryTools.Services;
+using InventoryTools.Ui;
 using Microsoft.Extensions.Logging;
 
 namespace InventoryTools.Logic.Filters;
@@ -18,10 +19,12 @@ namespace InventoryTools.Logic.Filters;
 public class CraftIngredientPreferenceFilter : SortedListFilter<(IngredientPreferenceType, uint?), (IngredientPreferenceType, uint?)>
 {
     private readonly ItemSheet _itemSheet;
+    private readonly PopupService _popupService;
 
-    public CraftIngredientPreferenceFilter(ILogger<CraftIngredientPreferenceFilter> logger, ImGuiService imGuiService, ItemSheet itemSheet) : base(logger, imGuiService)
+    public CraftIngredientPreferenceFilter(ILogger<CraftIngredientPreferenceFilter> logger, ImGuiService imGuiService, ItemSheet itemSheet, PopupService popupService) : base(logger, imGuiService)
     {
         _itemSheet = itemSheet;
+        _popupService = popupService;
     }
 
     public override Dictionary<(IngredientPreferenceType, uint?), (string, string?)> CurrentValue(FilterConfiguration configuration)
@@ -116,6 +119,8 @@ public class CraftIngredientPreferenceFilter : SortedListFilter<(IngredientPrefe
         IngredientPreferenceType.Empty,
     };
 
+    private (IngredientPreferenceType, uint?)? _draggedItem = null;
+
     public void AddItem(FilterConfiguration configuration, IngredientPreferenceType type, uint? itemId = null)
     {
         var value = CurrentValue(configuration);
@@ -123,42 +128,125 @@ public class CraftIngredientPreferenceFilter : SortedListFilter<(IngredientPrefe
         UpdateFilterConfiguration(configuration, value);
     }
 
+    public override void DrawTable(FilterConfiguration configuration)
+    {
+        var value = CurrentValue(configuration);
+        var entries = value.ToList();
+
+        using var table = ImRaii.Table(Key + "ColumnEditTable", 3,
+            ImGuiTableFlags.RowBg | ImGuiTableFlags.BordersOuter | ImGuiTableFlags.SizingStretchSame);
+        if (!table.Success) return;
+
+        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 20);
+        ImGui.TableSetupColumn("Preference", ImGuiTableColumnFlags.WidthStretch);
+        ImGui.TableSetupColumn("", ImGuiTableColumnFlags.WidthFixed, 24);
+
+        (IngredientPreferenceType, uint?)? toRemove = null;
+
+        for (var i = 0; i < entries.Count; i++)
+        {
+            var entry = entries[i];
+            var itemKey = entry.Key;
+
+            ImGui.TableNextRow();
+
+            ImGui.TableNextColumn();
+            ImGui.Button("=##DragHandle" + i);
+            if (ImGui.IsItemHovered())
+            {
+                using (ImRaii.Tooltip())
+                {
+                    ImGui.Text("Click and drag to reorder");
+                }
+            }
+
+            using (var source = ImRaii.DragDropSource())
+            {
+                if (source)
+                {
+                    _draggedItem = itemKey;
+                    ImGui.SetDragDropPayload("##IngredientPrefReorder", []);
+                    ImGui.TextUnformatted("Moving: " +entry.Value.Item1);
+                }
+            }
+
+            using (var target = ImRaii.DragDropTarget())
+            {
+                if (target)
+                {
+                    if (OtterGui.ImGuiUtil.IsDropping("##IngredientPrefReorder") &&
+                        _draggedItem != null && !_draggedItem.Value.Equals(itemKey))
+                    {
+                        var sourceIdx = entries.FindIndex(c => c.Key.Equals(_draggedItem!.Value));
+                        if (sourceIdx >= 0)
+                        {
+                            var delta = i - sourceIdx;
+                            if (delta > 0)
+                            {
+                                for (var d = 0; d < delta; d++)
+                                {
+                                    MoveItemDown(configuration, _draggedItem!.Value);
+                                }
+                            }
+                            else
+                            {
+                                for (var d = 0; d < -delta; d++)
+                                {
+                                    MoveItemUp(configuration, _draggedItem!.Value);
+                                }
+                            }
+                        }
+                        _draggedItem = null;
+                    }
+                }
+            }
+
+            ImGui.TableNextColumn();
+            ImGui.TextUnformatted(entry.Value.Item1);
+
+            ImGui.TableNextColumn();
+            if (ImGui.SmallButton("X##Remove" + i))
+            {
+                toRemove = itemKey;
+            }
+        }
+
+        if (toRemove != null)
+        {
+            RemoveItem(configuration, toRemove.Value);
+        }
+    }
 
     public override void Draw(FilterConfiguration configuration)
     {
         ImGui.TextUnformatted(GetName(configuration));
-        ImGui.Separator();
-        DrawTable(configuration);
         ImGui.SameLine();
         ImGuiService.HelpMarker(GetHelpText(configuration));
+        ImGui.Separator();
 
-        var currentAddColumn = "";
-        ImGui.SetNextItemWidth(LabelSize);
-        ImGui.LabelText("##" + Key + "Label", "Add new preference: ");
-        ImGui.SameLine();
         var currentValue = CurrentValue(configuration);
-        using (var combo = ImRaii.Combo("##Add" + Key, currentAddColumn, ImGuiComboFlags.HeightLarge))
+
+        ImGui.TextUnformatted("Add Preference:");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(LabelSize);
+        using (var combo = ImRaii.Combo("##Add" + Key, "", ImGuiComboFlags.HeightLarge))
         {
             if (combo.Success)
             {
-                if (ImGui.Selectable("None", false))
-                {
-                }
                 foreach (var preferenceType in _preferenceTypes.Where(c => !currentValue.ContainsKey((c, null))))
                 {
-                    var formattedName = preferenceType.FormattedName();
-                    if (ImGui.Selectable(formattedName, currentAddColumn == formattedName))
+                    if (ImGui.Selectable(preferenceType.FormattedName()))
                     {
-                        AddItem(configuration,preferenceType);
+                        AddItem(configuration, preferenceType);
                     }
                 }
             }
         }
-        ImGui.SetNextItemWidth(LabelSize);
-        ImGui.LabelText("##" + Key + "Label", "Add new item preference: ");
         ImGui.SameLine();
-        var currentAddItem = "";
-        using (var combo = ImRaii.Combo("##AddItem" + Key, currentAddItem, ImGuiComboFlags.HeightLarge))
+        ImGui.TextUnformatted("Add Item Preference:");
+        ImGui.SameLine();
+        ImGui.SetNextItemWidth(LabelSize);
+        using (var combo = ImRaii.Combo("##AddItem" + Key, "", ImGuiComboFlags.HeightLarge))
         {
             if (combo.Success)
             {
@@ -174,16 +262,34 @@ public class CraftIngredientPreferenceFilter : SortedListFilter<(IngredientPrefe
                 {
                     ImGui.TextUnformatted("Start typing to search...");
                 }
+
                 foreach (var item in SearchItems.Where(c => !currentValue.ContainsKey((IngredientPreferenceType.Item, c.RowId))))
                 {
-                    var formattedName = item.NameString;
-                    if (ImGui.Selectable(formattedName, currentAddItem == formattedName))
+                    if (ImGui.Selectable(item.NameString))
                     {
-                        AddItem(configuration,IngredientPreferenceType.Item, item.RowId);
+                        AddItem(configuration, IngredientPreferenceType.Item, item.RowId);
                     }
                 }
             }
         }
+
+        var resetWidth = ImGui.CalcTextSize("Reset to Default").X + ImGui.GetStyle().FramePadding.X * 2;
+        ImGui.SameLine(ImGui.GetContentRegionMax().X - resetWidth);
+        if (ImGui.Button("Reset to Default##IngredientPref"))
+        {
+            _popupService.AddPopup(new ConfirmPopup(typeof(CraftsWindow), "resetIngredientPref",
+                "Are you sure you want to reset the ingredient sourcing order to default?",
+                confirmed =>
+                {
+                    if (confirmed)
+                    {
+                        ResetFilter(configuration);
+                    }
+                }));
+        }
+
+        ImGui.Separator();
+        DrawTable(configuration);
     }
 
     private string _searchString = "";

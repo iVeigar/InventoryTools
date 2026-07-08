@@ -87,6 +87,7 @@ namespace InventoryTools
         private Dictionary<string, Vector4>? _vector4Settings = new();
         private Dictionary<string, Enum>? _enumSettings = new();
         private Dictionary<string, Dictionary<Type, bool>>? _typeDictionarySettings = new();
+        private Dictionary<string, List<string>>? _listSettings = new();
         private Dictionary<ItemInfoType, TooltipSourceSetting>? _tooltipInfoSourceSetting = new();
         private Dictionary<ItemInfoType, TooltipSourceSetting>? _tooltipInfoUseSetting = new();
 
@@ -350,6 +351,13 @@ namespace InventoryTools
         public bool SwitchFiltersAutomatically { get; set; } = true;
         public bool SwitchCraftListsAutomatically { get; set; } = true;
         private bool _tooltipCurrentCharacter;
+        private bool _tooltipDisplayGlamourReadySet;
+        private uint? _tooltipGlamourReadySetColor;
+        private GlamourReadySetDisplayMode _tooltipGlamourReadySetDisplayMode = GlamourReadySetDisplayMode.Detailed;
+        private List<InventorySearchScope>? _tooltipGlamourReadySetScope;
+        private bool _tooltipDisplayCofferLoot;
+        private uint? _tooltipCofferLootColor;
+        private List<InventorySearchScope>? _tooltipCofferLootScope;
         private bool _tooltipDisplayAmountOwned = true;
         private bool _tooltipDisplayUnlock;
         private List<ulong>? _tooltipDisplayUnlockCharacters = new();
@@ -436,6 +444,76 @@ namespace InventoryTools
             set
             {
                 _tooltipCurrentCharacter = value;
+                IsDirty = true;
+            }
+        }
+
+        public bool TooltipDisplayGlamourReadySet
+        {
+            get => _tooltipDisplayGlamourReadySet;
+            set
+            {
+                _tooltipDisplayGlamourReadySet = value;
+                IsDirty = true;
+            }
+        }
+
+        public uint? TooltipGlamourReadySetColor
+        {
+            get => _tooltipGlamourReadySetColor;
+            set
+            {
+                _tooltipGlamourReadySetColor = value;
+                IsDirty = true;
+            }
+        }
+
+        public GlamourReadySetDisplayMode TooltipGlamourReadySetDisplayMode
+        {
+            get => _tooltipGlamourReadySetDisplayMode;
+            set
+            {
+                _tooltipGlamourReadySetDisplayMode = value;
+                IsDirty = true;
+            }
+        }
+
+        public List<InventorySearchScope>? TooltipGlamourReadySetScope
+        {
+            get => _tooltipGlamourReadySetScope;
+            set
+            {
+                _tooltipGlamourReadySetScope = value;
+                IsDirty = true;
+            }
+        }
+
+        public bool TooltipDisplayCofferLoot
+        {
+            get => _tooltipDisplayCofferLoot;
+            set
+            {
+                _tooltipDisplayCofferLoot = value;
+                IsDirty = true;
+            }
+        }
+
+        public uint? TooltipCofferLootColor
+        {
+            get => _tooltipCofferLootColor;
+            set
+            {
+                _tooltipCofferLootColor = value;
+                IsDirty = true;
+            }
+        }
+
+        public List<InventorySearchScope>? TooltipCofferLootScope
+        {
+            get => _tooltipCofferLootScope;
+            set
+            {
+                _tooltipCofferLootScope = value;
                 IsDirty = true;
             }
         }
@@ -815,6 +893,20 @@ namespace InventoryTools
 
         public bool FirstRun { get; set; } = true;
 
+        public uint ChocoboLockedCurrentStainId { get; set; } = 0;
+        public uint ChocoboLockedTargetStainId { get; set; } = 0;
+
+        public List<uint> ChocoboLockedFruitIds
+        {
+            get => _chocoboLockedFruitIds ??= new List<uint>();
+            set
+            {
+                _chocoboLockedFruitIds = value;
+                IsDirty = true;
+            }
+        }
+        public int ChocoboFruitsCheckedCount { get; set; } = 0;
+
         [DefaultValue(true)]
         private bool _showWizardNewFeatures { get; set; } = true;
 
@@ -890,6 +982,7 @@ namespace InventoryTools
         private bool _marketBoardUseActiveWorld = true;
         private bool _marketBoardUseHomeWorld = true;
         private List<uint>? _marketBoardWorldIds;
+        private List<uint>? _chocoboLockedFruitIds;
         private HighlightWhen _highlightWhenEnum;
 
         public ModifiableHotkey? GetHotkey(string hotkey)
@@ -985,6 +1078,12 @@ namespace InventoryTools
         {
             get => _vector4Settings ??= new Dictionary<string, Vector4>();
             set => _vector4Settings = value;
+        }
+
+        public Dictionary<string, List<string>> ListSettings
+        {
+            get => _listSettings ??= new Dictionary<string, List<string>>();
+            set => _listSettings = value;
         }
 
 
@@ -1119,6 +1218,29 @@ namespace InventoryTools
             else
             {
                 this.Vector4Settings[key] = newValue.Value;
+            }
+
+            this.IsDirty = true;
+        }
+
+        public List<TEnum>? Get<TEnum>(string key, List<TEnum>? defaultValue) where TEnum : struct, Enum
+        {
+            if (!this.ListSettings.TryGetValue(key, out var strings)) return defaultValue;
+            var result = new List<TEnum>();
+            foreach (var s in strings)
+                if (Enum.TryParse<TEnum>(s, out var val)) result.Add(val);
+            return result;
+        }
+
+        public void Set<TEnum>(string key, List<TEnum>? newValue) where TEnum : struct, Enum
+        {
+            if (newValue == null)
+            {
+                this.ListSettings.Remove(key);
+            }
+            else
+            {
+                this.ListSettings[key] = newValue.ConvertAll(v => v.ToString());
             }
 
             this.IsDirty = true;

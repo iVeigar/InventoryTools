@@ -29,7 +29,7 @@ public class ItemListSection : ViewSection
 
     public delegate ItemListSection Factory(ItemListSectionOptions options);
 
-    public ItemListSection(ItemListSectionOptions options, MediatorService mediatorService, IFont font, ImGuiService imGuiService, ITextureProvider textureProvider, ImGuiTooltipService tooltipService, ImGuiMenuService menuService, ItemInfoRenderService itemInfoRenderService) : base(imGuiService)
+    public ItemListSection(ItemListSectionOptions options, MediatorService mediatorService, IFont font, ImGuiService imGuiService, ITextureProvider textureProvider, ImGuiTooltipService tooltipService, ImGuiMenuService menuService, ItemInfoRenderService itemInfoRenderService) : base(options, imGuiService)
     {
         _options = options;
         _mediatorService = mediatorService;
@@ -61,6 +61,11 @@ public class ItemListSection : ViewSection
             sectionState.Set(sectionModeId, ItemListSectionMode.List);
         }
     };
+
+    public override bool IsEmpty(SectionState sectionState)
+    {
+        return !_options.Items.Any();
+    }
 
     public override void DrawSection(SectionState sectionState)
     {

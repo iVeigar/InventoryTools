@@ -188,16 +188,19 @@ public class RelicToolCompendiumType : CompendiumType<RelicToolGroup>
 
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
+            SectionKey = "class_job",
             SectionName = "Class/Job",
             RelatedRef = (RowRef)row.ClassJob
         });
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
+            SectionKey = "related_quests",
             SectionName = "Related Quests",
             RelatedRefs = row.Quests.Where(c => c.RowId != 0).Select(c => (RowRef)c).ToList(),
         });
         viewBuilder.AddItemFlowSection(new ItemFlowSectionOptions()
         {
+            SectionKey = "tools",
             SectionName = "Tools",
             Items = itemFlowEntries,
             ItemsPerColumn = Math.Max(3, (int)Math.Ceiling((double)itemFlowEntries.Count / 3))

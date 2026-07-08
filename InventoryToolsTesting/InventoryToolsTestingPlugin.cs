@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
 using AllaganLib.GameSheets.Extensions;
 using AllaganLib.Shared.Time;
 using Autofac;
@@ -39,14 +41,15 @@ public class InventoryToolsTestingPlugin : InventoryToolsPlugin
 {
     private Logger seriLog;
 
-    public InventoryToolsTestingPlugin(IDalamudPluginInterface pluginInterface, IPluginLog pluginLog, IFramework framework) : base(pluginInterface, pluginLog, framework)
+    public InventoryToolsTestingPlugin(MockReplacementContainer mockReplacementContainer, IDalamudPluginInterface pluginInterface, IPluginLog pluginLog, IFramework framework, IChatGui chatGui) : base(pluginInterface, pluginLog, framework, chatGui)
     {
+        ReplacementContainer = mockReplacementContainer;
     }
 
-    public override void PreBuild(IHostBuilder hostBuilder)
-    {
-        base.PreBuild(hostBuilder);
+    public override IReplacementContainer ReplacementContainer { get; }
 
+    public override Task PreBuildingAsync(IHostBuilder hostBuilder, CancellationToken cancellationToken)
+    {
         this.ReplaceHostedService(typeof(WotsitIpc),typeof(MockWotsitIpc));
         this.ReplaceHostedService(typeof(CraftMonitor),typeof(MockHostedCraftMonitor));
         this.ReplaceHostedService(typeof(OdrScanner),typeof(MockOdrScanner));
@@ -73,6 +76,7 @@ public class InventoryToolsTestingPlugin : InventoryToolsPlugin
                 containerBuilder.RegisterInstance(seriLog).As<ILogger>().SingleInstance();
             }
         );
+        return Task.CompletedTask;
     }
 
     public override void ConfigureServices(IServiceCollection serviceCollection)

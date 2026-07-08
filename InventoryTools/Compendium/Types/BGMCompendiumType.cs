@@ -108,11 +108,15 @@ public class BGMCompendiumType : CompendiumType<BGM>
             if (bgmOrchestrion.Orchestrion.RowId != 0)
             {
                 viewBuilder.Description = bgmOrchestrion.Orchestrion.Value.Description.ToImGuiString();
-                viewBuilder.AddTag("Unlocked?", "Is the orchestrion roll unlocked?", () => _unlockState.IsOrchestrionUnlocked(bgmOrchestrion.Orchestrion.Value) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
+                viewBuilder.AddTag(
+                    () => _unlockState.IsOrchestrionUnlocked(bgmOrchestrion.Orchestrion.Value) ? "Unlocked" : "Not Unlocked",
+                    () => "Is the orchestrion roll unlocked?",
+                    () => _unlockState.IsOrchestrionUnlocked(bgmOrchestrion.Orchestrion.Value) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
                 if (_orchestionToItem.Value.TryGetValue(bgmOrchestrion.OrchestrionId, out var orchestrionItemId))
                 {
                     viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
                     {
+                        SectionKey = "orchestrion_roll",
                         SectionName = "Orchestrion Roll",
                         RelatedRef = _itemSheet.GetRow(orchestrionItemId).AsUntypedRowRef()
                     });

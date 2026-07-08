@@ -784,16 +784,16 @@ namespace InventoryTools.Services
             {
                 _genericWindows.Remove(genericWindow.GetType(), out _);
             }
-            if (window is UintWindow uintWindow)
+            else if (window is UintWindow uintWindow)
             {
                 _uintWindows.Remove((uintWindow.GetType(), uintWindow.WindowId), out _);
             }
-            if (window is StringWindow stringWindow)
+            else if (window is StringWindow stringWindow)
             {
                 _stringWindows.Remove((stringWindow.GetType(), stringWindow.WindowId), out _);
             }
 
-            if (window is CompendiumListWindow listWindow)
+            else if (window is CompendiumListWindow listWindow)
             {
                 _compendiumListWindows.Remove(listWindow.CompendiumType, out var ownedListWindow);
                 if (ownedListWindow != null)
@@ -807,7 +807,7 @@ namespace InventoryTools.Services
                 return;
             }
 
-            if (window is CompendiumViewWindow viewWindow)
+            else if (window is CompendiumViewWindow viewWindow)
             {
                 _compendiumViewWindows.Remove((viewWindow.CompendiumType, viewWindow.EntityId), out var ownedViewWindow);
                 if (ownedViewWindow != null)
@@ -826,6 +826,8 @@ namespace InventoryTools.Services
                 WindowSystem.RemoveWindow(actualWindow3);
             }
             window.Dispose();
+            window.Opened -= WindowOnOpened;
+            window.Closed -= WindowOnClosed;
         }
 
 

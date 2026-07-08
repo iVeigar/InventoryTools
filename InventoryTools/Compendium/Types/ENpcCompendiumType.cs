@@ -108,12 +108,14 @@ public class ENpcCompendiumType : CompendiumType<IGrouping<string, ENpcBaseRow>>
         {
             RelatedRefs = row.SelectMany(c => c.Base.ENpcData).DistinctBy(c => c.RowId).ToList(),
             Filter = typeof(Quest),
+            SectionKey = "related_quests",
             SectionName = "Related Quests"
         });
         var mapLinks = row.SelectMany(c => c.Locations).Select(c => new MapLinkEntry(Icons.FlagIcon, c.FormattedName, "", c)).ToList();
         viewBuilder.AddMapLinksSectionSection(new MapLinksViewSectionOptions()
         {
             MapLinks = mapLinks,
+            SectionKey = "known_locations",
             SectionName = "Known Locations"
         });
 

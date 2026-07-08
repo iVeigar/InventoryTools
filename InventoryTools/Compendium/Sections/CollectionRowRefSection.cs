@@ -37,7 +37,7 @@ public class CollectionRowRefSection : ViewSection
 
     public delegate CollectionRowRefSection Factory(CollectionRowRefSectionOptions options);
 
-    public CollectionRowRefSection(CollectionRowRefSectionOptions options, ICompendiumTypeFactory compendiumTypeFactory, ImGuiService imGuiService, ITextureProvider textureProvider, MediatorService mediatorService) : base(imGuiService)
+    public CollectionRowRefSection(CollectionRowRefSectionOptions options, ICompendiumTypeFactory compendiumTypeFactory, ImGuiService imGuiService, ITextureProvider textureProvider, MediatorService mediatorService) : base(options, imGuiService)
     {
         _options = options;
         _textureProvider = textureProvider;
@@ -65,20 +65,15 @@ public class CollectionRowRefSection : ViewSection
 
     public override string SectionName => _options.SectionName;
 
-    public override bool ShouldDraw(SectionState sectionState)
+    public override bool IsEmpty(SectionState sectionState)
     {
-        if (_options.HideIfEmpty)
+        foreach (var item in _rowRefItems)
         {
-            foreach (var item in _rowRefItems)
+            if (item.CompendiumType != null && item.CompendiumType.HasRow(item.RowRef.RowId))
             {
-                if (item.CompendiumType != null && item.CompendiumType.HasRow(item.RowRef.RowId))
-                {
-                    return true;
-                }
+                return false;
             }
-            return false;
         }
-
         return true;
     }
 
@@ -116,7 +111,7 @@ public class CollectionRowRefSection : ViewSection
             }
         }
 
-        if (!hasDrawnAny && !_options.HideIfEmpty)
+        if (!hasDrawnAny && !_options.HideWhenEmpty)
         {
             ImGui.Text("No related items found.");
         }

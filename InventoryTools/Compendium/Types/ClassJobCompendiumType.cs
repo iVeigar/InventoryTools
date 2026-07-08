@@ -24,10 +24,14 @@ public class ClassJobCompendiumType : CompendiumType<ClassJobRow>
     private readonly ClassJobSheet _classJobSheet;
     private readonly SubrowExcelSheet<ScenarioTreeTipsClassQuest> _treeTipsClassQuestSheet;
     private readonly ILocalizer<RoleType> _roleLocalizer;
+    private readonly JobSoulCrystalCompendiumType _jobSoulCrystalCompendiumType;
+    private readonly CraftSoulCrystalCompendiumType _craftSoulCrystalCompendiumType;
 
     public ClassJobCompendiumType(ClassJobSheet classJobSheet,
         SubrowExcelSheet<ScenarioTreeTipsClassQuest> treeTipsClassQuestSheet,
         ILocalizer<RoleType> roleLocalizer,
+        JobSoulCrystalCompendiumType jobSoulCrystalCompendiumType,
+        CraftSoulCrystalCompendiumType craftSoulCrystalCompendiumType,
         CompendiumTable<ClassJobRow>.Factory tableFactory,
         CompendiumColumnBuilder<ClassJobRow>.Factory columnBuilder,
         CompendiumViewBuilder.Factory viewBuilderFactory) : base(tableFactory,
@@ -37,6 +41,8 @@ public class ClassJobCompendiumType : CompendiumType<ClassJobRow>
         _classJobSheet = classJobSheet;
         _treeTipsClassQuestSheet = treeTipsClassQuestSheet;
         _roleLocalizer = roleLocalizer;
+        _jobSoulCrystalCompendiumType = jobSoulCrystalCompendiumType;
+        _craftSoulCrystalCompendiumType = craftSoulCrystalCompendiumType;
     }
 
     public override ICompendiumTable<WindowState, MessageBase> BuildTable()
@@ -107,19 +113,34 @@ public class ClassJobCompendiumType : CompendiumType<ClassJobRow>
         viewBuilder.SetupDefaults(this, row);
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
+            SectionKey = "base_class",
             SectionName = "Base Class",
             RelatedRef = (RowRef)row.Base.ClassJobParent
         });
-        viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
+
+        var soulCrystalItemId = row.Base.ItemSoulCrystal.RowId;
+        if (soulCrystalItemId != 0)
         {
-            SectionName = "Soul Crystal",
-            RelatedRef = (RowRef)row.Base.ItemSoulCrystal,
-        });
+            var isCrafting = row.ClassJobCategory?.IsCrafting == true;
+            var soulCrystalCompendiumType = isCrafting
+                ? (ICompendiumType)_craftSoulCrystalCompendiumType
+                : _jobSoulCrystalCompendiumType;
+
+            viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
+            {
+                SectionKey = "soul_crystal",
+                SectionName = "Soul Crystal",
+                RelatedRef = (RowRef)row.Base.ItemSoulCrystal,
+                OverrideCompendiumType = soulCrystalCompendiumType,
+            });
+        }
+
         var firstQuest = _treeTipsClassQuestSheet.GetRow(row.RowId).FirstOrNull();
         if (firstQuest != null)
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
             {
+                SectionKey = "unlock_quest",
                 SectionName = "Unlock Quest",
                 RelatedRef = (RowRef)firstQuest.Value.Quest
             });
@@ -129,6 +150,7 @@ public class ClassJobCompendiumType : CompendiumType<ClassJobRow>
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
             {
+                SectionKey = "unlock_quest",
                 SectionName = "Unlock Quest",
                 RelatedRef = (RowRef)row.Base.UnlockQuest
             });
@@ -136,11 +158,13 @@ public class ClassJobCompendiumType : CompendiumType<ClassJobRow>
 
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
+            SectionKey = "relic_quest",
             SectionName = "Relic Quest",
             RelatedRef = (RowRef)row.Base.RelicQuest
         });
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
+            SectionKey = "prerequisite_quest",
             SectionName = "Prerequisite Quest",
             RelatedRef = (RowRef)row.Base.Prerequisite
         });

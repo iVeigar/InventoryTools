@@ -12,6 +12,8 @@ using Dalamud.Bindings.ImGui;
 using InventoryTools.Logic;
 using InventoryTools.Logic.Settings.Abstract;
 using InventoryTools.Ui.MenuItems;
+using DalaMock.Shared.Interfaces;
+using Dalamud.Interface;
 using InventoryTools.Ui.Widgets;
 using OtterGui;
 using Dalamud.Interface.Utility.Raii;
@@ -45,6 +47,7 @@ namespace InventoryTools.Ui
         private readonly IComponentContext _context;
         private readonly InventoryToolsConfiguration _configuration;
         private readonly VerticalSplitter _verticalSplitter;
+        private readonly IFont _font;
         private IEnumerable<IMenuWindow>? _menuWindows;
         private FilterConfiguration? _nextFilter;
 
@@ -63,7 +66,8 @@ namespace InventoryTools.Ui
             SettingPage.Factory settingPageFactory,
             FilterConfiguration.Factory filterConfigurationFactory,
             IEnumerable<ISampleFilter> sampleFilters,
-            IComponentContext context) : base(logger,
+            IComponentContext context,
+            IFont font) : base(logger,
             mediator,
             imGuiService,
             configuration,
@@ -83,6 +87,7 @@ namespace InventoryTools.Ui
             _context = context;
             _configuration = configuration;
             _verticalSplitter = new VerticalSplitter(250, new Vector2(200, 400));
+            _font = font;
             this.Flags = ImGuiWindowFlags.MenuBar;
         }
 
@@ -111,9 +116,7 @@ namespace InventoryTools.Ui
             _configPages.Add(_settingPageFactory.Invoke(SettingCategory.Misc));
             _configPages.Add(_settingPageFactory.Invoke(SettingCategory.Troubleshooting, null, true));
             _configPages.Add(new SeparatorPageItem("Data", true));
-            _configPages.Add(_configPageFactory.Invoke(typeof(FiltersPage)));
-            _configPages.Add(_configPageFactory.Invoke(typeof(CraftFiltersPage)));
-            _configPages.Add(_configPageFactory.Invoke(typeof(ImportExportPage)));
+            _configPages.Add(_configPageFactory.Invoke(typeof(ListsPage)));
             _configPages.Add(_configPageFactory.Invoke(typeof(CharacterRetainerPage)));
 
             _addFilterMenu = new PopupMenu("addFilter", PopupMenu.PopupMenuButtons.LeftRight,
@@ -203,10 +206,7 @@ namespace InventoryTools.Ui
             Invalidate();
         }
 
-        private HoverButton _addIcon = new();
-        private HoverButton _lightBulbIcon= new();
-        private HoverButton _menuIcon = new ();
-        private HoverButton _wizardStart = new();
+
 
         private PopupMenu _wizardMenu = null!;
 
@@ -465,6 +465,11 @@ namespace InventoryTools.Ui
                                 }
                             }
 
+                            if (ImGui.MenuItem("Generate Support Dump"))
+                            {
+                                this.MediatorService.Publish(new OpenGenericWindowMessage(typeof(SupportDumpWindow)));
+                            }
+
                             if (ImGui.MenuItem("Ko-Fi"))
                             {
                                 "https://ko-fi.com/critical_impact".OpenBrowser();
@@ -705,7 +710,8 @@ namespace InventoryTools.Ui
                     float height = ImGui.GetWindowSize().Y;
                     ImGui.SetCursorPosY(height - 24 * ImGui.GetIO().FontGlobalScale);
 
-                    if(_addIcon.Draw(ImGuiService.GetIconTexture(66315).Handle, "addFilter"))
+                    var cursorX = ImGui.GetCursorPosX();
+                    if (ImGuiService.DrawIconButton(_font, FontAwesomeIcon.Plus, ref cursorX))
                     {
 
                     }
@@ -716,7 +722,7 @@ namespace InventoryTools.Ui
                     ImGui.SetCursorPosY(height - 24 * ImGui.GetIO().FontGlobalScale);
                     ImGui.SetCursorPosX(26 * ImGui.GetIO().FontGlobalScale);
 
-                    if (_lightBulbIcon.Draw(ImGuiService.GetIconTexture(66318).Handle,"addSample"))
+                    if (ImGuiService.DrawIconButton(_font, FontAwesomeIcon.Lightbulb, ref cursorX))
                     {
 
                     }
@@ -724,13 +730,11 @@ namespace InventoryTools.Ui
                     _addSampleMenu.Draw();
                     ImGuiUtil.HoverTooltip("Add a sample filter");
 
-                    var width = ImGui.GetWindowSize().X;
+                    var width = ImGui.GetCursorPosX();
                     width -= 24 * ImGui.GetIO().FontGlobalScale;
 
                     ImGui.SetCursorPosY(height - 24 * ImGui.GetIO().FontGlobalScale);
-                    ImGui.SetCursorPosX(width);
-
-                    if (_menuIcon.Draw(ImGuiService.GetImageTexture("menu").Handle, "openMenu"))
+                    if (ImGuiService.DrawIconButton(_font, FontAwesomeIcon.Bars, ref width))
                     {
 
                     }
@@ -741,9 +745,7 @@ namespace InventoryTools.Ui
                     width -= 26 * ImGui.GetIO().FontGlobalScale;
 
                     ImGui.SetCursorPosY(height - 24 * ImGui.GetIO().FontGlobalScale);
-                    ImGui.SetCursorPosX(width);
-
-                    if (_wizardStart.Draw(ImGuiService.GetImageTexture("wizard").Handle, "openMenu"))
+                    if (ImGuiService.DrawIconButton(_font, FontAwesomeIcon.WandMagicSparkles, ref width))
                     {
                         _wizardMenu.Open();
                     }

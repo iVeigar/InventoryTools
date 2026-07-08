@@ -112,6 +112,8 @@ public class GearsetCompendiumType : CompendiumType<Gearset>
         builder.AddStringColumn(new (){Key = "name", Name = "Name", HelpText = "The name of the gearset", Version = "14.0.3", ValueSelector = row => row.Name});
         builder.AddItemSourcesColumn(new() { Key = "sources", Name = "Sources", HelpText = "The combined sources for the gearset.", Version = "14.0.3", ValueSelector = gearset => gearset.Items.Where(c => c.RowId != 0).SelectMany(c => _itemInfoCache.GetItemSources(c.RowId) ?? []).ToList()});
         builder.AddStringColumn(new (){Key = "patch", Name = "Patch", HelpText = "The patch the gearset was added.", Version = "14.0.3", ValueSelector = gearset => string.Join(", ", gearset.Items.Where(c => c.RowId != 0).Select(c => _itemSheet.GetRow(c.RowId).Patch.ToString(CultureInfo.InvariantCulture)).Distinct())});
+        builder.AddIntegerColumn(new (){Key = "ilvl", Name = "Item Level", HelpText = "The highest item level (iLvl) across all pieces in the gearset.", Version = "15.0.6", Width = 60, ValueSelector = gearset => { var max = gearset.Items.Where(c => c.RowId != 0).Select(c => (int)_itemSheet.GetRow(c.RowId).Base.LevelItem.RowId).DefaultIfEmpty(0).Max(); return max == 0 ? null : max.ToString(); }});
+        builder.AddIntegerColumn(new (){Key = "equip_level", Name = "Equip Level", HelpText = "The highest required equip level across all pieces in the gearset.", Version = "15.0.6", Width = 60, ValueSelector = gearset => { var max = gearset.Items.Where(c => c.RowId != 0).Select(c => (int)_itemSheet.GetRow(c.RowId).Base.LevelEquip).DefaultIfEmpty(0).Max(); return max == 0 ? null : max.ToString(); }});
         for (int i = 0; i < 12; i++)
         {
             var index = i;
@@ -126,6 +128,6 @@ public class GearsetCompendiumType : CompendiumType<Gearset>
         viewBuilder.Icon = Icons.ArmorIcon;
         viewBuilder.Subtitle = itemCount + " " + (row.Items.Count == 1 ? "item" : "items");
         viewBuilder.AddLink("https://ffxiv.eorzeacollection.com/gearset/" + row.Key, "Open in Eorzea Collection", "ec");
-        viewBuilder.AddSection(_itemListSectionFactory.Invoke(new(){SectionName = "Set Items", Items = row.Items.Where(c => c.RowId != 0).Select(c => ItemInfo.Create(_itemSheet.GetRow(c.RowId)))}));
+        viewBuilder.AddSection(_itemListSectionFactory.Invoke(new(){SectionKey = "set_items", SectionName = "Set Items", Items = row.Items.Where(c => c.RowId != 0).Select(c => ItemInfo.Create(_itemSheet.GetRow(c.RowId)))}));
     }
 }

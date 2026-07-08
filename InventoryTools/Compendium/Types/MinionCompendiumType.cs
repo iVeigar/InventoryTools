@@ -15,6 +15,7 @@ using InventoryTools.Compendium.Models;
 using InventoryTools.Compendium.Sections.Options;
 using InventoryTools.Compendium.Services;
 using InventoryTools.Localizers;
+using InventoryTools.Ui;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
@@ -153,11 +154,15 @@ public class MinionCompendiumType : CompendiumType<Companion>
         viewBuilder.SetupDefaults(this, row);
         var transientInformation = _companionTransientSheet.GetRow(row.RowId);
         viewBuilder.Description = transientInformation.DescriptionEnhanced.ToImGuiString();
-        viewBuilder.AddTag("Unlocked?", "Is the minion unlocked?", () => _unlockState.IsCompanionUnlocked(row) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
-        viewBuilder.AddTag("Type: " + transientInformation.MinionSkillType.Value.Name.ToImGuiString(), "The skill type of the minion.");
-        viewBuilder.AddTag("Action: " + transientInformation.SpecialActionName.ToImGuiString(), transientInformation.SpecialActionDescription.ToImGuiString());
+        viewBuilder.AddTag(
+            () => _unlockState.IsCompanionUnlocked(row) ? "Unlocked" : "Not Unlocked",
+            () => "Is the minion unlocked?",
+            () => _unlockState.IsCompanionUnlocked(row) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
+        viewBuilder.AddTag(() => "Type: " + transientInformation.MinionSkillType.Value.Name.ToImGuiString(), () => "The skill type of the minion.");
+        viewBuilder.AddTag(() => "Action: " + transientInformation.SpecialActionName.ToImGuiString(), () => transientInformation.SpecialActionDescription.ToImGuiString());
         viewBuilder.AddInfoTableSection(new InfoTableSectionOptions()
         {
+            SectionKey = "stats",
             SectionName = "Stats",
             Items =
             [
@@ -171,14 +176,17 @@ public class MinionCompendiumType : CompendiumType<Companion>
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
             {
+                SectionKey = "related_item",
                 SectionName = "Related Item",
                 RelatedRef = relatedItem.Value.AsUntypedRowRef()
             });
             var itemSources = _itemInfoCache.GetItemSources(relatedItem.Value.RowId);
             viewBuilder.AddItemSourcesSection(new ItemSourcesSectionOptions()
             {
+                SectionKey = "sources",
                 SectionName = "Sources",
-                Sources = itemSources ?? []
+                Sources = itemSources ?? [],
+                SourceType = SourceType.Source
             });
         }
     }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 using AllaganLib.Shared.Extensions;
 using Dalamud.Bindings.ImGui;
@@ -30,14 +31,18 @@ public class CompendiumViewBuilder
     private readonly MetadataSection.Factory _metadataSectionFactory;
     private readonly ItemSourcesSection.Factory _itemSourcesSectionFactory;
     private readonly ItemFlowSection.Factory _itemFlowSectionFactory;
+    private readonly LinksSection.Factory _linksSectionFactory;
+    private readonly NestedSection.Factory _nestedSectionFactory;
     private string _title;
     private string? _subtitle;
     private string? _description;
     private uint _icon;
-    private List<(string Link, string HelpText, ISharedImmediateTexture texture)>? _links;
-    private List<(string Tag, string HelpText, Func<Vector4>? color)>? _tags;
+    private LinksSection? _linksSection;
+    private LinksSectionOptions? _linksSectionOptions;
+    private List<(Func<string> Tag, Func<string> HelpText, Func<Vector4>? color)>? _tags;
     private List<(string Title, string HelpText, Action action)>? _buttons;
     private List<ICompendiumViewSection>? _sections;
+    private string? _draggedSectionKey;
 
     public delegate CompendiumViewBuilder Factory(ICompendiumType compendiumType);
 
@@ -53,7 +58,9 @@ public class CompendiumViewBuilder
         LevelViewSection.Factory levelViewFactory,
         MetadataSection.Factory metadataSectionFactory,
         ItemSourcesSection.Factory itemSourcesSectionFactory,
-        ItemFlowSection.Factory itemFlowSectionFactory)
+        ItemFlowSection.Factory itemFlowSectionFactory,
+        LinksSection.Factory linksSectionFactory,
+        NestedSection.Factory nestedSectionFactory)
     {
         _textureProvider = textureProvider;
         _imGuiService = imGuiService;
@@ -67,6 +74,8 @@ public class CompendiumViewBuilder
         _metadataSectionFactory = metadataSectionFactory;
         _itemSourcesSectionFactory = itemSourcesSectionFactory;
         _itemFlowSectionFactory = itemFlowSectionFactory;
+        _linksSectionFactory = linksSectionFactory;
+        _nestedSectionFactory = nestedSectionFactory;
     }
 
     public string Title
@@ -95,20 +104,41 @@ public class CompendiumViewBuilder
 
     public void AddLink(string link, string helpText, uint iconId)
     {
-        _links ??= new();
-        _links.Add(new  (link, helpText, _textureProvider.GetFromGameIcon(iconId)));
+        if (_linksSectionOptions == null)
+        {
+            this._sections ??= [];
+            _linksSectionOptions ??= new LinksSectionOptions()
+            {
+                SectionName = "Links",
+                SectionKey = "links"
+            };
+            _linksSection ??= _linksSectionFactory.Invoke(_linksSectionOptions);
+            this._sections = this._sections.Prepend(_linksSection).ToList();
+        }
+
+        _linksSectionOptions.Links.Add(new  (link, helpText, _textureProvider.GetFromGameIcon(iconId)));
     }
 
     public void AddLink(string link, string helpText, string imageName)
     {
-        _links ??= new();
-        _links.Add(new  (link, helpText, _imGuiService.LoadImage(imageName)));
+        if (_linksSectionOptions == null)
+        {
+            this._sections ??= [];
+            _linksSectionOptions ??= new LinksSectionOptions()
+            {
+                SectionName = "Links",
+                SectionKey = "links"
+            };
+            _linksSection ??= _linksSectionFactory.Invoke(_linksSectionOptions);
+            this._sections = this._sections.Prepend(_linksSection).ToList();
+        }
+        _linksSectionOptions.Links.Add(new  (link, helpText, _imGuiService.LoadImage(imageName)));
     }
 
-    public void AddTag(string tag, string helpText, Func<Vector4>? color = null)
+    public void AddTag(Func<string> tag, Func<string> helpText, Func<Vector4>? color = null)
     {
         _tags ??= new();
-        _tags.Add(new  (tag, helpText, color));
+        _tags.Add(new (tag, helpText, color));
     }
 
     public void AddButton(string title, string helpText, Action action)
@@ -171,6 +201,16 @@ public class CompendiumViewBuilder
     public void AddItemFlowSection(ItemFlowSectionOptions options)
     {
         AddSection(_itemFlowSectionFactory.Invoke(options));
+    }
+
+    public ItemListSection CreateItemListSection(ItemListSectionOptions options)
+    {
+        return _itemListFactory.Invoke(options);
+    }
+
+    public void AddNestedSection(NestedSectionOptions options)
+    {
+        AddSection(_nestedSectionFactory.Invoke(options));
     }
 
     static void DrawTag(string id, string text, Vector4 color)
@@ -240,7 +280,9 @@ public class CompendiumViewBuilder
         var itemRight = ImGui.GetItemRectMax().X - ImGui.GetWindowPos().X;
 
         if (itemRight + spacing < windowRight)
+        {
             ImGui.SameLine(0, spacing);
+        }
     }
 
     public void Draw(SectionState sectionState)
@@ -292,18 +334,21 @@ public class CompendiumViewBuilder
 
                 var color = tag.color?.Invoke() ?? ImGuiColors.DalamudWhite;
 
-                DrawTag($"tag{i}", tag.Tag, color);
+                var tagText = tag.Tag();
+                DrawTag($"tag{i}", tagText, color);
 
                 if (ImGui.IsItemHovered())
                 {
                     using (ImRaii.Tooltip())
                     {
-                        ImGui.TextUnformatted(tag.HelpText);
+                        ImGui.TextUnformatted(tag.HelpText());
                     }
                 }
 
                 if (i != _tags.Count - 1)
-                    SameLineWrap(_tags[i + 1].Tag);
+                {
+                    SameLineWrap(_tags[i + 1].Tag());
+                }
             }
         }
 
@@ -329,7 +374,9 @@ public class CompendiumViewBuilder
                 }
 
                 if (i != _buttons.Count - 1)
+                {
                     SameLineWrap(_buttons[i + 1].Title);
+                }
             }
         }
 
@@ -337,38 +384,116 @@ public class CompendiumViewBuilder
         ImGui.Separator();
         ImGui.Spacing();
 
-        if (_links != null && _links.Count != 0)
-        {
-            if (ImGui.CollapsingHeader("Links", ImGuiTreeNodeFlags.DefaultOpen))
-            {
-                for (var index = 0; index < _links.Count; index++)
-                {
-                    var link = _links[index];
-                    if (ImGui.ImageButton(link.texture.GetWrapOrEmpty().Handle,
-                            new Vector2(32, 32) * ImGui.GetIO().FontGlobalScale))
-                    {
-                        link.Link.OpenBrowser();
-                    }
-
-                    ImGuiUtil.HoverTooltip(link.HelpText);
-                    if (index != _links.Count - 1)
-                    {
-                        ImGui.SameLine();
-                    }
-                }
-            }
-        }
-
         if (_sections != null && _sections.Count != 0)
         {
-            for (var index = 0; index < _sections.Count; index++)
+            var orderedSections = GetOrderedSections(sectionState);
+            if (sectionState.EditMode)
             {
-                var section = _sections[index];
-                using (ImRaii.PushId("Section" + index))
+                DrawEditMode(sectionState, orderedSections);
+            }
+            else
+            {
+                DrawNormal(sectionState, orderedSections);
+            }
+        }
+    }
+
+    private List<ICompendiumViewSection> GetOrderedSections(SectionState sectionState)
+    {
+        var order = sectionState.SectionOrder;
+        if (order == null || order.Count == 0 || _sections == null)
+        {
+            return _sections ?? new List<ICompendiumViewSection>();
+        }
+
+        var ordered = new List<ICompendiumViewSection>(order.Count);
+        foreach (var key in order)
+        {
+            var section = _sections.FirstOrDefault(s => s.SectionOptions.SectionKey == key);
+            if (section != null)
+            {
+                ordered.Add(section);
+            }
+        }
+        foreach (var section in _sections)
+        {
+            if (!ordered.Contains(section))
+            {
+                ordered.Add(section);
+            }
+        }
+        return ordered;
+    }
+
+    private void DrawNormal(SectionState sectionState, List<ICompendiumViewSection> sections)
+    {
+        for (var index = 0; index < sections.Count; index++)
+        {
+            var section = sections[index];
+            if (!sectionState.IsSectionVisible(section.SectionOptions.SectionKey))
+            {
+                continue;
+            }
+
+            using (ImRaii.PushId("Section" + index))
+            {
+                section.Draw(sectionState);
+            }
+        }
+    }
+
+    private void DrawEditMode(SectionState sectionState, List<ICompendiumViewSection> sections)
+    {
+        for (var index = 0; index < sections.Count; index++)
+        {
+            var section = sections[index];
+            var key = section.SectionOptions.SectionKey;
+            var visible = sectionState.IsSectionVisible(key);
+
+            using (ImRaii.PushId("EditSection" + index))
+            {
+                ImGui.Button("=");
+                using (var source = ImRaii.DragDropSource())
                 {
-                    section.Draw(sectionState);
+                    if (source)
+                    {
+                        _draggedSectionKey = key;
+                        ImGui.SetDragDropPayload("##SectionReorder"u8, []);
+                        ImGui.TextUnformatted("Moving: " + section.SectionOptions.SectionName);
+                    }
+                }
+
+                using (var target = ImRaii.DragDropTarget())
+                {
+                    if (target)
+                    {
+                        if (ImGuiUtil.IsDropping("##SectionReorder") && _draggedSectionKey != null)
+                        {
+                            var newOrder = sections.Select(s => s.SectionOptions.SectionKey).ToList();
+                            newOrder.Remove(_draggedSectionKey);
+                            newOrder.Insert(index, _draggedSectionKey);
+                            sectionState.SectionOrder = newOrder;
+                            _draggedSectionKey = null;
+                        }
+                    }
+                }
+
+                ImGui.SameLine();
+
+                var visibleCopy = visible;
+                if (ImGui.Checkbox("##vis", ref visibleCopy))
+                {
+                    sectionState.SetSectionVisible(key, visibleCopy);
+                }
+
+                ImGui.SameLine();
+
+                using (ImRaii.Disabled(!visible))
+                {
+                    ImGui.TextUnformatted(section.SectionOptions.SectionName);
                 }
             }
+            ImGui.Separator();
         }
     }
 

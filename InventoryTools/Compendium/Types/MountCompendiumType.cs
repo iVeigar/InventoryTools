@@ -13,6 +13,7 @@ using InventoryTools.Compendium.Interfaces;
 using InventoryTools.Compendium.Models;
 using InventoryTools.Compendium.Sections.Options;
 using InventoryTools.Compendium.Services;
+using InventoryTools.Ui;
 using Lumina.Excel;
 using Lumina.Excel.Sheets;
 
@@ -196,9 +197,12 @@ public class MountCompendiumType : CompendiumType<Mount>
         viewBuilder.Description =
             transient.Description.ToImGuiString();
 
-        viewBuilder.AddTag("Unlocked?", "Is unlocked", () => _unlockState.IsMountUnlocked(row) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
+        viewBuilder.AddTag(
+            () => _unlockState.IsMountUnlocked(row) ? "Unlocked" : "Not Unlocked",
+            () => "Is unlocked",
+            () => _unlockState.IsMountUnlocked(row) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
 
-        viewBuilder.AddTag("Seats " + (row.ExtraSeats + 1), "How many people does this mount seat?");
+        viewBuilder.AddTag(() => "Seats " + (row.ExtraSeats + 1), () => "How many people does this mount seat?");
 
         var relatedItem = GetRelatedItem(row.RowId);
 
@@ -206,6 +210,7 @@ public class MountCompendiumType : CompendiumType<Mount>
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
             {
+                SectionKey = "related_item",
                 SectionName = "Related Item",
                 RelatedRef = relatedItem.Value.AsUntypedRowRef()
             });
@@ -215,8 +220,10 @@ public class MountCompendiumType : CompendiumType<Mount>
 
             viewBuilder.AddItemSourcesSection(new ItemSourcesSectionOptions()
                 {
+                    SectionKey = "sources",
                     SectionName = "Sources",
-                    Sources = sources ?? []
+                    Sources = sources ?? [],
+                    SourceType = SourceType.Source
                 });
         }
 
@@ -224,6 +231,7 @@ public class MountCompendiumType : CompendiumType<Mount>
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
             {
+                SectionKey = "bgm",
                 SectionName = "BGM",
                 RelatedRef = row.RideBGM.Value.AsUntypedRowRef(),
             });

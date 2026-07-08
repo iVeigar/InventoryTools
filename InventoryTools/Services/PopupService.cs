@@ -184,7 +184,7 @@ public class MultiLineTextPopup : IPopup
         }
 
 
-        ImGui.InputTextMultiline("##multiline", ref _text, 2048, new System.Numerics.Vector2(400, 150));
+        ImGui.InputTextMultiline("##multiline", ref _text, 5000, new System.Numerics.Vector2(400, 150));
 
         ImGui.Separator();
 

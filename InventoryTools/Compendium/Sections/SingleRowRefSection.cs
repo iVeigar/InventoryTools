@@ -29,14 +29,22 @@ public class SingleRowRefSection : ViewSection
 
     public delegate SingleRowRefSection Factory(SingleRowRefSectionOptions options);
 
-    public SingleRowRefSection(SingleRowRefSectionOptions options, ICompendiumTypeFactory compendiumTypeFactory, ImGuiService imGuiService, ITextureProvider textureProvider, MediatorService mediatorService) : base(imGuiService)
+    public SingleRowRefSection(SingleRowRefSectionOptions options, ICompendiumTypeFactory compendiumTypeFactory, ImGuiService imGuiService, ITextureProvider textureProvider, MediatorService mediatorService) : base(options, imGuiService)
     {
         _options = options;
         _textureProvider = textureProvider;
         _mediatorService = mediatorService;
-        _relatedCompendiumType = compendiumTypeFactory.GetByRowRef(options.RelatedRef, out _refType);
+        if (options.OverrideCompendiumType != null)
+        {
+            _relatedCompendiumType = options.OverrideCompendiumType;
+            _refType = options.OverrideCompendiumType.Type;
+        }
+        else
+        {
+            _relatedCompendiumType = compendiumTypeFactory.GetByRowRef(options.RelatedRef, out _refType);
+        }
         relatedRefRowId = _options.RelatedRef.RowId;
-        if (_options.RelatedRef.RowType != null)
+        if (_options.RelatedRef.RowType != null && options.OverrideCompendiumType == null)
         {
             var newId = _relatedCompendiumType?.RemapType(_options.RelatedRef.RowType, relatedRefRowId);
             if (newId != null)
@@ -47,22 +55,22 @@ public class SingleRowRefSection : ViewSection
     }
 
     public override string SectionName => _options.SectionName ?? "Related " + (_relatedCompendiumType?.Singular ?? "Object");
-    public override bool ShouldDraw(SectionState sectionState)
+    public override bool IsEmpty(SectionState sectionState)
     {
         if (_relatedCompendiumType == null)
         {
             if (_refType == null)
             {
-                return false;
+                return true;
             }
         }
 
         if (_relatedCompendiumType != null && !_relatedCompendiumType.HasRow(relatedRefRowId))
         {
-            return false;
+            return true;
         }
 
-        return true;
+        return false;
     }
 
     public override void DrawSection(SectionState sectionState)

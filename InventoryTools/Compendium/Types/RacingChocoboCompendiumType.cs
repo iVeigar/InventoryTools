@@ -135,6 +135,7 @@ public class RacingChocoboItemCompendiumType : CompendiumType<RacingChocoboItem>
 
         viewBuilder.AddInfoTableSection(new()
         {
+            SectionKey = "info",
             SectionName = "Info",
             Items =
             [

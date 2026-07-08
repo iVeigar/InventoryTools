@@ -14,6 +14,8 @@ public class TooltipsFeature : Feature
             typeof(TooltipSourceInformationEnabledSetting),
             typeof(TooltipUseInformationEnabledSetting),
             typeof(TooltipDisplayIngredientPatchSetting),
+            typeof(TooltipDisplayCofferLootSetting),
+            typeof(TooltipDisplayGlamourReadySetSetting),
         },
         settings)
     {

@@ -39,7 +39,7 @@ public class ItemFlowSection : ViewSection
         ITextureProvider textureProvider,
         ImGuiTooltipService tooltipService,
         ImGuiMenuService menuService
-    ) : base(imGuiService)
+    ) : base(options, imGuiService)
     {
         _options = options;
         _mediatorService = mediatorService;

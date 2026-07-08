@@ -97,6 +97,7 @@ public class LeveCompendiumType : CompendiumType<LeveRow>
         builder.AddIntegerColumn(new() { Key = "exp", Name = "EXP", HelpText = "The exp rewarded on completion of the leve", Version = "14.0.3", ValueSelector = row => row.ExpReward.ToString() });
         builder.AddIntegerColumn(new() { Key = "gil", Name = "Gil", HelpText = "The gil rewarded on completion of the leve", Version = "14.0.3", ValueSelector = row => row.GilReward.ToString() });
         builder.AddStringColumn(new() { Key = "startlocation", Name = "Start Location", HelpText = "The start location of the leve", Version = "14.0.3", ValueSelector = row => row.StartLocation?.FormattedName ?? null });
+        builder.AddIntegerColumn(new() { Key = "handins", Name = "Hand Ins", HelpText = "The number of times the leve can be handed in", Version = "14.0.3", ValueSelector = row => row.HandIns.ToString() });
 
         //Maybe make a reward display column
         builder.AddItemsColumn(new()
@@ -157,6 +158,7 @@ public class LeveCompendiumType : CompendiumType<LeveRow>
         viewBuilder.Description = row.Base.Description.ToImGuiString();
         viewBuilder.AddInfoTableSection(new()
         {
+            SectionKey = "info",
             SectionName = "Info",
             HideHeader = false,
             Items =
@@ -164,13 +166,15 @@ public class LeveCompendiumType : CompendiumType<LeveRow>
             ("Level", row.Base.ClassJobLevel.ToString(), true),
             ("EXP", row.ExpReward.ToString(), row.ExpReward > 0),
             ("Gil", row.GilReward.ToString(),  row.GilReward > 0),
-            ("Allowances", row.Base.AllowanceCost.ToString(), row.Base.AllowanceCost > 0)
+            ("Allowances", row.Base.AllowanceCost.ToString(), row.Base.AllowanceCost > 0),
+            ("Hand-Ins", row.HandIns.ToString(), true)
         ]
         });
         if (row.StartENpc != null && row.StartENpc.ENpcBase.Locations.Any())
         {
             viewBuilder.AddMapLinkSectionSection(new MapLinkViewSectionOptions()
             {
+                SectionKey = "leve_issuer",
                 SectionName = "Leve Issuer",
                 MapLink = new MapLinkEntry(Icons.FlagIcon, _npcLocalizer.Format(row.StartENpc.ENpcBase.Base), row.StartENpc.ENpcBase.Locations.First().FormattedName, row.StartENpc.ENpcBase.Locations.First())
             });
@@ -179,6 +183,7 @@ public class LeveCompendiumType : CompendiumType<LeveRow>
         {
             viewBuilder.AddMapLinkSectionSection(new MapLinkViewSectionOptions()
             {
+                SectionKey = "leve_start",
                 SectionName = "Leve Start",
                 MapLink = new MapLinkEntry(Icons.FlagIcon, row.StartLocation.FormattedName, row.StartLocation.FormattedName, row.StartLocation)
             });
@@ -193,6 +198,7 @@ public class LeveCompendiumType : CompendiumType<LeveRow>
             {
                 viewBuilder.AddItemListSection(new ItemListSectionOptions()
                 {
+                    SectionKey = "required_items",
                     SectionName = "Required Items",
                     Items = requiredItems,
                 });
@@ -227,6 +233,7 @@ public class LeveCompendiumType : CompendiumType<LeveRow>
         {
             viewBuilder.AddItemListSection(new ItemListSectionOptions()
             {
+                SectionKey = "reward_items",
                 SectionName = "Reward Items",
                 Items = rewards,
             });

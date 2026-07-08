@@ -7,6 +7,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using InventoryTools.Compendium.Interfaces;
 using InventoryTools.Compendium.Models;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 
 namespace InventoryTools.Compendium.Services;
@@ -15,12 +16,14 @@ public class CompendiumSectionStateService : IDisposable
 {
     private readonly IReliableFileStorage _reliableFileStorage;
     private readonly IDalamudPluginInterface _pluginInterface;
+    private readonly ILogger<CompendiumSectionStateService> _logger;
     private readonly Dictionary<ICompendiumType, SectionState> _loadedSections;
 
-    public CompendiumSectionStateService(IReliableFileStorage reliableFileStorage, IDalamudPluginInterface pluginInterface)
+    public CompendiumSectionStateService(IReliableFileStorage reliableFileStorage, IDalamudPluginInterface pluginInterface, ILogger<CompendiumSectionStateService> logger)
     {
         _reliableFileStorage = reliableFileStorage;
         _pluginInterface = pluginInterface;
+        _logger = logger;
         _loadedSections = new();
     }
 
@@ -55,7 +58,14 @@ public class CompendiumSectionStateService : IDisposable
         if (_reliableFileStorage.Exists(statePath))
         {
             var contents = await _reliableFileStorage.ReadAllTextAsync(statePath);
-            sectionState = JsonConvert.DeserializeObject<SectionState>(contents);
+            try
+            {
+                sectionState = JsonConvert.DeserializeObject<SectionState>(contents);
+            }
+            catch (Exception e)
+            {
+                _logger.LogError(e, "Unable to parse saved configuration.");
+            }
         }
 
         if (sectionState == null)

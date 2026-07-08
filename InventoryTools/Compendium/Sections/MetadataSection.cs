@@ -14,7 +14,7 @@ public sealed class MetadataSection : ViewSection
     public delegate MetadataSection Factory(MetadataSectionOptions options);
 
     public MetadataSection(MetadataSectionOptions options, ImGuiService imGuiService)
-        : base(imGuiService)
+        : base(options, imGuiService)
     {
         SectionName = options.SectionName;
         _rows = options.Rows;
@@ -22,15 +22,15 @@ public sealed class MetadataSection : ViewSection
 
     public override string SectionName { get; }
 
-    public override bool ShouldDraw(SectionState sectionState)
+    public override bool IsEmpty(SectionState sectionState)
     {
         foreach (var row in _rows)
         {
             if (row.ShouldDraw == null || row.ShouldDraw())
-                return true;
+                return false;
         }
 
-        return false;
+        return true;
     }
 
     public override void DrawSection(SectionState sectionState)

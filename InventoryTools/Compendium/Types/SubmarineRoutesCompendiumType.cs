@@ -83,6 +83,7 @@ public class SubmarineRoutesCompendiumType : CompendiumType<SubmarineExploration
         };
         viewBuilder.AddInfoTableSection(new InfoTableSectionOptions()
         {
+            SectionKey = "information",
             SectionName = "Information",
             Items = information.AsReadOnly()
         });
@@ -90,6 +91,7 @@ public class SubmarineRoutesCompendiumType : CompendiumType<SubmarineExploration
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
             {
+                SectionKey = "unlocked_via",
                 SectionName = "Unlocked Via",
                 RelatedRef = row.Unlock.Base.AsUntypedRowRef()
             });
@@ -97,13 +99,15 @@ public class SubmarineRoutesCompendiumType : CompendiumType<SubmarineExploration
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
             RelatedRefs = _submarineExplorationSheet.Where(c => c.UnlockId != null && c.UnlockId == row.RowId).Select(c => c.Base.AsUntypedRowRef()).ToList(),
+            SectionKey = "unlocks",
             SectionName = "Unlocks",
-            HideIfEmpty = true
+            HideWhenEmpty = true
         });
 
         viewBuilder.AddItemListSection(new ItemListSectionOptions()
         {
             Items = row.DropItems.Select(c => new ItemInfo(c)).ToList(),
+            SectionKey = "potential_drops",
             SectionName = "Potential Drops"
         });
     }

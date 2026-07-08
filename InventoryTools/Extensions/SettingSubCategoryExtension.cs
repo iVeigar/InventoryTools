@@ -63,6 +63,12 @@ namespace InventoryTools.Extensions
                     return "Acquisition Tracker";
                 case SettingSubCategory.IngredientPatch:
                     return "Ingredient Patch";
+                case SettingSubCategory.GlamourReadySet:
+                    return "Outfit Glamours";
+                case SettingSubCategory.CofferLoot:
+                    return "Coffer Loot";
+                case SettingSubCategory.ShopHighlighting:
+                    return "Shop Highlighting";
             }
             return settingSubCategory.ToString();
         }

@@ -681,7 +681,7 @@ public class ImGuiMenuService
                     {
                         var spearfishingItem = gatheringSources.First().SpearfishingItemRow;
                         var groupedGatheringSources = gatheringSources.SelectMany(c => c.SpearfishingItemRow.GatheringPoints)
-                            .DistinctBy(c => c.RowId).GroupBy(c => c.SpearfishingNotebook!.TerritoryTypeRow!.Map!.RowId).ToDictionary(c => c.Key, c => c);
+                            .Where(c => c.SpearfishingNotebook != null).DistinctBy(c => c.RowId).GroupBy(c => c.SpearfishingNotebook!.TerritoryTypeRow!.Map!.RowId).ToDictionary(c => c.Key, c => c);
 
                         foreach (var groupedGathering in groupedGatheringSources)
                         {
@@ -722,7 +722,7 @@ public class ImGuiMenuService
                 {
                     var spearfishingItem = gatheringSources.First().SpearfishingItemRow;
                     var groupedGatheringSources = gatheringSources.SelectMany(c => c.SpearfishingItemRow.GatheringPoints)
-                        .DistinctBy(c => c.RowId).GroupBy(c => c.SpearfishingNotebook!.TerritoryTypeRow!.Map!.RowId).ToDictionary(c => c.Key, c => c);
+                        .Where(c => c.SpearfishingNotebook != null).DistinctBy(c => c.RowId).GroupBy(c => c.SpearfishingNotebook!.TerritoryTypeRow!.Map!.RowId).ToDictionary(c => c.Key, c => c);
 
                     foreach (var groupedGathering in groupedGatheringSources)
                     {

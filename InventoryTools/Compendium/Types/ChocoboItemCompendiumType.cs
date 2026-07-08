@@ -153,6 +153,7 @@ public class ChocoboItemCompendiumType : CompendiumType<ChocoboItem>
         var dyeField = row.BuddyItem?.Value.Unknown0;
         viewBuilder.AddInfoTableSection(new()
         {
+            SectionKey = "info",
             SectionName = "Info",
             Items =
             [

@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using AllaganLib.GameSheets.Sheets;
 using AllaganLib.GameSheets.Sheets.Rows;
 using AllaganLib.Shared.Extensions;
@@ -9,6 +11,7 @@ using CriticalCommonLib.Services;
 using CriticalCommonLib.Services.Mediator;
 using DalaMock.Host.Mediator;
 using InventoryTools.Attributes;
+using InventoryTools.Compendium.Interfaces;
 using InventoryTools.Compendium.Windows;
 using InventoryTools.EquipmentSuggest;
 using InventoryTools.Mediator;
@@ -25,14 +28,16 @@ namespace InventoryTools.Commands
         private readonly IChatUtilities _chatUtilities;
         private readonly ItemSheet _itemSheet;
         private readonly IListService _listService;
+        private readonly IEnumerable<ICompendiumType> _compendiumTypes;
 
-        public PluginCommands(MediatorService mediatorService, IChatUtilities chatUtilities, ItemSheet itemSheet, IListService listService, ILogger<PluginCommands> logger)
+        public PluginCommands(MediatorService mediatorService, IChatUtilities chatUtilities, ItemSheet itemSheet, IListService listService, ILogger<PluginCommands> logger, IEnumerable<ICompendiumType> compendiumTypes)
         {
             Logger = logger;
             _mediatorService = mediatorService;
             _chatUtilities = chatUtilities;
             _itemSheet = itemSheet;
             _listService = listService;
+            _compendiumTypes = compendiumTypes;
         }
 
         [Command("/allagantools")]
@@ -69,6 +74,33 @@ namespace InventoryTools.Commands
         public void ShowCompendiumWindow(string command, string args)
         {
             _mediatorService.Publish(new ToggleGenericWindowMessage(typeof(CompendiumTypesWindow)));
+        }
+
+        [Command("/compendiumlist")]
+        [Aliases("/atclt")]
+        [HelpMessage("Toggle a specific compendium list window.")]
+        public void ToggleCompendiumListWindow(string command, string args)
+        {
+            if (args == string.Empty)
+            {
+                var message = "Please enter the name of a compendium type, the following are available:\n";
+                message += string.Join("\n", _compendiumTypes.Where(c => c.ShowInListing).Select(c => c.Plural));
+                _chatUtilities.Print(message);
+            }
+            else
+            {
+                var name = args.ToLowerInvariant();
+                var compendiumType = _compendiumTypes.FirstOrDefault(c =>
+                    c.Singular.ToLowerInvariant() == name || c.Plural.ToLowerInvariant() == name);
+                if (compendiumType != null)
+                {
+                    _mediatorService.Publish(new ToggleCompendiumListMessage(compendiumType));
+                }
+                else
+                {
+                    _chatUtilities.PrintError(args + " is not a valid compendium type.");
+                }
+            }
         }
 
 
@@ -207,6 +239,14 @@ namespace InventoryTools.Commands
         public void EquipmentRecommendation(string command, string args)
         {
             _mediatorService.Publish(new ToggleGenericWindowMessage(typeof(EquipmentSuggestWindow)));
+        }
+
+        [Command("/chocobocolour")]
+        [Aliases("/atcc")]
+        [HelpMessage("Toggles the chocobo colour calculator window.")]
+        public void ToggleChocoboColourWindow(string command, string args)
+        {
+            _mediatorService.Publish(new ToggleGenericWindowMessage(typeof(ChocoboColourWindow)));
         }
 
         [Command("/moreinfo")]

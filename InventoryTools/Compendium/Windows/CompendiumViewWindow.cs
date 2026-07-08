@@ -12,7 +12,9 @@ using Autofac.Features.OwnedInstances;
 using CriticalCommonLib;
 using DalaMock.Host.Mediator;
 using Dalamud.Bindings.ImGui;
+using Dalamud.Interface;
 using Dalamud.Interface.Utility.Raii;
+using Dalamud.Interface.Windowing;
 using Dalamud.Plugin.Services;
 using InventoryTools.Compendium.Interfaces;
 using InventoryTools.Compendium.Models;
@@ -51,6 +53,18 @@ public class CompendiumViewWindow : CompendiumWindow
         _menuWindows = menuWindows;
         _compendiumTypes = compendiumTypes.Where(c => c.ShowInListing).OrderBy(c => c.Plural);
         Flags = ImGuiWindowFlags.MenuBar;
+        TitleBarButtons.Add(new TitleBarButton
+        {
+            Icon = FontAwesomeIcon.Edit,
+            ShowTooltip = () => ImGui.SetTooltip(_sectionState?.EditMode == true ? "Exit edit mode" : "Edit section layout"),
+            Click = _ =>
+            {
+                if (_sectionState != null)
+                {
+                    _sectionState.EditMode = !_sectionState.EditMode;
+                }
+            }
+        });
     }
 
     public override void DrawWindow()
@@ -145,6 +159,11 @@ public class CompendiumViewWindow : CompendiumWindow
                                 {
                                     this._pluginLog.MinimumLogLevel = LogEventLevel.Verbose;
                                 }
+                            }
+
+                            if (ImGui.MenuItem("Generate Support Dump"))
+                            {
+                                this.MediatorService.Publish(new OpenGenericWindowMessage(typeof(SupportDumpWindow)));
                             }
 
                             if (ImGui.MenuItem("Report a Issue"))

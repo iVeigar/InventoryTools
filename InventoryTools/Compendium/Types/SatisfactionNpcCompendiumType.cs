@@ -24,6 +24,7 @@ public class SatisfactionNpcCompendiumType : CompendiumType<SatisfactionNpc>
     private readonly ExcelSheet<Quest> _questSheet;
     private readonly ExcelSheet<ExVersion> _expansionSheet;
     private readonly ENpcResidentSheet _eNpcResidentSheet;
+    private readonly ItemSheet _itemSheet;
 
     public SatisfactionNpcCompendiumType(
         LevelSheet levelSheet,
@@ -34,6 +35,7 @@ public class SatisfactionNpcCompendiumType : CompendiumType<SatisfactionNpc>
         ExcelSheet<Quest> questSheet,
         ExcelSheet<ExVersion> expansionSheet,
         ENpcResidentSheet eNpcResidentSheet,
+        ItemSheet itemSheet,
         CompendiumTable<SatisfactionNpc>.Factory tableFactory,
         CompendiumColumnBuilder<SatisfactionNpc>.Factory columnBuilder,
         CompendiumViewBuilder.Factory viewBuilderFactory
@@ -47,6 +49,7 @@ public class SatisfactionNpcCompendiumType : CompendiumType<SatisfactionNpc>
         _questSheet = questSheet;
         _expansionSheet = expansionSheet;
         _eNpcResidentSheet = eNpcResidentSheet;
+        _itemSheet = itemSheet;
     }
 
     public override ICompendiumTable<WindowState, MessageBase> BuildTable()
@@ -164,11 +167,12 @@ public class SatisfactionNpcCompendiumType : CompendiumType<SatisfactionNpc>
     public override void BuildViewFields(CompendiumViewBuilder viewBuilder, SatisfactionNpc row)
     {
         viewBuilder.SetupDefaults(this, row);
-        viewBuilder.AddTag($"{row.DeliveriesPerWeek}/week", "The number of times you can deliver to the client per week.");
+        viewBuilder.AddTag(() => $"{row.DeliveriesPerWeek}/week", () => "The number of times you can deliver to the client per week.");
 
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
             RelatedRef = (RowRef)row.QuestRequired,
+            SectionKey = "unlock_quest",
             SectionName = "Unlock Quest"
         });
 
@@ -183,25 +187,34 @@ public class SatisfactionNpcCompendiumType : CompendiumType<SatisfactionNpc>
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
             RelatedRefs = rankQuests,
+            SectionKey = "rank_quests",
             SectionName = "Rank Quests",
-            HideIfEmpty = false
+            HideWhenEmpty = false
         });
 
-        var supplyRow = _satisfactionSupplySheet
-            .GetRow(row.RowId);
-
-        var supplyItems = supplyRow
-            .Where(s => s.Item.RowId != 0)
-            .Select(s => (RowRef)s.Item)
-            .DistinctBy(i => i.RowId)
+        var tierParams = row.SatisfactionNpcParams
+            .Select((param, index) => (param, index))
+            .Where(t => t.param.SupplyIndex != 0)
             .ToList();
 
-        viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
+        for (var i = 0; i < tierParams.Count; i++)
         {
-            RelatedRefs = supplyItems,
-            SectionName = "Requested Items",
-            HideIfEmpty = false
-        });
+            var (param, _) = tierParams[i];
+            var tierNumber = i + 1;
+            var supplyItems = _satisfactionSupplySheet.GetRow((uint)param.SupplyIndex)
+                .Where(s => s.Item.RowId != 0)
+                .DistinctBy(item => item.Item.RowId)
+                .Select(s => new ItemInfo(_itemSheet.GetRow(s.Item.RowId)))
+                .ToList();
+
+            viewBuilder.AddItemListSection(new ItemListSectionOptions()
+            {
+                Items = supplyItems,
+                SectionKey = $"requested_items_tier_{tierNumber}",
+                SectionName = $"Requested Items (Tier {tierNumber})",
+                HideWhenEmpty = true
+            });
+        }
 
         var location = GetLocation(row);
         if (location != null)
@@ -214,6 +227,7 @@ public class SatisfactionNpcCompendiumType : CompendiumType<SatisfactionNpc>
                     location.FormattedName,
                     location
                 ),
+                SectionKey = "location",
                 SectionName = "Location"
             });
         }
@@ -221,6 +235,7 @@ public class SatisfactionNpcCompendiumType : CompendiumType<SatisfactionNpc>
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
             RelatedRef = (RowRef)row.Npc,
+            SectionKey = "related_npc",
             SectionName = "Related NPC"
         });
 

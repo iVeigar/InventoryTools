@@ -24,14 +24,6 @@ namespace InventoryTools.Logic.Columns
         public override float Width { get; set; } = 200;
         public override string HelpText { get; set; } = "Shows if an item can be equipped by a specific gender.";
         public override bool HasFilter { get; set; } = true;
-        public override ColumnFilterType FilterType { get; set; } = ColumnFilterType.Choice;
-
-        public override List<string>? FilterChoices { get; set; } = new List<string>()
-        {
-            CharacterSex.Both.FormattedName(),
-            CharacterSex.Male.FormattedName(),
-            CharacterSex.Female.FormattedName(),
-            CharacterSex.NotApplicable.FormattedName(),
-        };
+        public override ColumnFilterType FilterType { get; set; } = ColumnFilterType.Text;
     }
 }

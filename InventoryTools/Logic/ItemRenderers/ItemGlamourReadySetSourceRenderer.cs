@@ -20,8 +20,8 @@ public class ItemGlamourReadySetSourceRenderer : ItemInfoRenderer<ItemGlamourRea
 
     public override RendererType RendererType => RendererType.Use;
     public override ItemInfoType Type => ItemInfoType.GlamourReadySet;
-    public override string SingularName => "Glamour Ready Set";
-    public override string HelpText => "Is this item the glamour ready form of a 'Glamour Ready' outfit set?";
+    public override string SingularName => "Outfit Glamour Set";
+    public override string HelpText => "Is this item the combined form of a 'Outfit Glamour' set?";
 
     public override bool ShouldGroup => true;
 

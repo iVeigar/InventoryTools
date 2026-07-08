@@ -38,6 +38,9 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
     private readonly ContextMenuAddToFavouritesSetting _addToFavouritesSetting;
     private readonly ContextMenuMoreInformationNpcsSetting _moreInformationNpcsSetting;
     private readonly ContextMenuMoreInformationMonstersSetting _moreInformationMonstersSetting;
+    private readonly ContextMenuCopyNameSetting _copyNameSetting;
+    private readonly IClipboardService _clipboardService;
+    private ulong? cachedHoverItemId = null;
     public const int SatisfactionSupplyItemIdx       = 84;
     public const int SatisfactionSupplyItem1Id       = 128 + 1 * 60;
     public const int SatisfactionSupplyItem2Id       = 128 + 2 * 60;
@@ -70,7 +73,9 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
         ContextMenuAddToCuratedListSetting curatedListSetting,
         ContextMenuAddToFavouritesSetting addToFavouritesSetting,
         ContextMenuMoreInformationNpcsSetting moreInformationNpcsSetting,
-        ContextMenuMoreInformationMonstersSetting moreInformationMonstersSetting) : base(logger, mediatorService)
+        ContextMenuMoreInformationMonstersSetting moreInformationMonstersSetting,
+        ContextMenuCopyNameSetting copyNameSetting,
+        IClipboardService clipboardService) : base(logger, mediatorService)
     {
         ContextMenu = contextMenu;
         _listService = listService;
@@ -83,6 +88,8 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
         _addToFavouritesSetting = addToFavouritesSetting;
         _moreInformationNpcsSetting = moreInformationNpcsSetting;
         _moreInformationMonstersSetting = moreInformationMonstersSetting;
+        _copyNameSetting = copyNameSetting;
+        _clipboardService = clipboardService;
     }
 
     private void MenuOpened(IMenuOpenedArgs args)
@@ -134,6 +141,15 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
                 menuItem.Name = "Search";
                 menuItem.PrefixChar = 'A';
                 menuItem.OnClicked += clickedArgs => ItemSearchClicked(clickedArgs, itemId);
+                args.AddMenuItem(menuItem);
+            }
+
+            if (_copyNameSetting.CurrentValue(_configuration))
+            {
+                var menuItem = new MenuItem();
+                menuItem.Name = "Copy Name to Clipboard";
+                menuItem.PrefixChar = 'A';
+                menuItem.OnClicked += clickedArgs => CopyNameClicked(clickedArgs, itemId);
                 args.AddMenuItem(menuItem);
             }
 
@@ -299,6 +315,16 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
         if (item == null)
         {
             var guiHoveredItem = _gameGui.HoveredItem;
+            if (guiHoveredItem == 0 && cachedHoverItemId != null && args.AddonName == "Tryon") //Only allow TryOn otherwise everything with a context menu matches, this may expand later
+            {
+                Logger.LogDebug("Falling back to cached hovered item ID: {HoveredItemId}", guiHoveredItem);
+                guiHoveredItem = cachedHoverItemId.Value;
+                cachedHoverItemId = null;
+            }
+            else
+            {
+                Logger.LogDebug("Falling back to hovered item ID: {HoveredItemId}", guiHoveredItem);
+            }
             if (guiHoveredItem >= 2000000 || guiHoveredItem == 0) return null;
             item = (uint)guiHoveredItem % 500_000;
         }
@@ -555,17 +581,47 @@ public class ContextMenuService : DisposableMediatorSubscriberBase, IHostedServi
         }
     }
 
+    private void CopyNameClicked(IMenuItemClickedArgs obj, uint? itemId = null)
+    {
+        if (obj.Target is MenuTargetInventory inventory)
+        {
+            if (inventory.TargetItem != null)
+            {
+                itemId ??= inventory.TargetItem.Value.ItemId;
+            }
+        }
+
+        if (itemId != null)
+        {
+            var item = _itemSheet.GetRowOrDefault(itemId.Value);
+            if (item != null)
+            {
+                _clipboardService.CopyToClipboard(item.NameString);
+            }
+        }
+    }
+
     public Task StartAsync(CancellationToken cancellationToken)
     {
         Logger.LogTrace("Started service {type} ({this})", GetType().Name, this);
+        _gameGui.HoveredItemChanged += HoveredItemChanged;
         ContextMenu.OnMenuOpened += MenuOpened;
         return Task.CompletedTask;
+    }
+
+    private void HoveredItemChanged(object? sender, ulong e)
+    {
+        if (e != 0)
+        {
+            cachedHoverItemId = e;
+        }
     }
 
     public Task StopAsync(CancellationToken cancellationToken)
     {
         Logger.LogTrace("Stopping service {Type} ({This})", GetType().Name, this);
         ContextMenu.OnMenuOpened -= MenuOpened;
+        _gameGui.HoveredItemChanged -= HoveredItemChanged;
         Logger.LogTrace("Stopped service {Type} ({This})", GetType().Name, this);
         return Task.CompletedTask;
     }

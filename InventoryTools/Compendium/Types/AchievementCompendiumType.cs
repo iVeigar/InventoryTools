@@ -148,6 +148,7 @@ public class AchievementCompendiumType : CompendiumType<AchievementRow>
         }
         viewBuilder.AddInfoTableSection(new InfoTableSectionOptions()
         {
+            SectionKey = "information",
             SectionName = "Information",
             Items = information.AsReadOnly()
         });
@@ -159,6 +160,7 @@ public class AchievementCompendiumType : CompendiumType<AchievementRow>
         {
             RelatedRefs = items,
             Filter = typeof(Achievement),
+            SectionKey = "required_achievements",
             SectionName = "Required Achievements"
         });
 
@@ -169,6 +171,7 @@ public class AchievementCompendiumType : CompendiumType<AchievementRow>
             {
                 RelatedRefs = relatedAchievements,
                 Filter = typeof(Achievement),
+                SectionKey = "related_achievements",
                 SectionName = "Related Achievements"
             });
         }
@@ -177,6 +180,7 @@ public class AchievementCompendiumType : CompendiumType<AchievementRow>
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
             {
+                SectionKey = "unlocked_item",
                 SectionName = "Unlocked Item",
                 RelatedRef = row.Base.Item.Value.AsUntypedRowRef()
             });

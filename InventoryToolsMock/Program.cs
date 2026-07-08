@@ -1,9 +1,6 @@
-﻿using System.Numerics;
-using DalaMock.Core.DI;
-using DalaMock.Core.Mocks;
-using Dalamud.Bindings.ImGui;
+﻿using DalaMock.Core.Configuration;
+using DalaMock.Core.Plugin;
 using Dalamud.Game;
-using Lumina.Data;
 using Lumina.Excel.Sheets;
 
 namespace InventoryToolsMock
@@ -12,9 +9,7 @@ namespace InventoryToolsMock
     {
         static void Main(string[] args)
         {
-            var mockContainer = new MockContainer(new MockDalamudConfiguration()
-            {
-            });
+            var mockContainer = new MockContainer();
             var mockDalamudUi = mockContainer.GetMockUi();
             var pluginLoader = mockContainer.GetPluginLoader();
             mockContainer.GetGameData().GetExcelSheet<Item>();

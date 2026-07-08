@@ -24,18 +24,6 @@ namespace InventoryTools.Logic.Columns
         public override float Width { get; set; } = 200;
         public override string HelpText { get; set; } = "Shows if an item can be equipped by a specific race.";
         public override bool HasFilter { get; set; } = true;
-        public override ColumnFilterType FilterType { get; set; } = ColumnFilterType.Choice;
-
-        public override List<string>? FilterChoices { get; set; } = new List<string>()
-        {
-            CharacterRace.Hyur.FormattedName(),
-            CharacterRace.Elezen.FormattedName(),
-            CharacterRace.Lalafell.FormattedName(),
-            CharacterRace.Miqote.FormattedName(),
-            CharacterRace.Roegadyn.FormattedName(),
-            CharacterRace.Viera.FormattedName(),
-            CharacterRace.AuRa.FormattedName(),
-            CharacterRace.None.FormattedName(),
-        };
+        public override ColumnFilterType FilterType { get; set; } = ColumnFilterType.Text;
     }
 }

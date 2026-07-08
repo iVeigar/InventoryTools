@@ -15,7 +15,7 @@ public class InfoTableSection : ViewSection
 
     public delegate InfoTableSection Factory(InfoTableSectionOptions options);
 
-    public InfoTableSection(ImGuiService imGuiService, InfoTableSectionOptions options) : base(imGuiService)
+    public InfoTableSection(InfoTableSectionOptions options, ImGuiService imGuiService) : base(options, imGuiService)
     {
         _options = options;
     }

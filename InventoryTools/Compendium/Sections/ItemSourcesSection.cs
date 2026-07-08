@@ -5,6 +5,7 @@ using Dalamud.Bindings.ImGui;
 using InventoryTools.Compendium.Models;
 using InventoryTools.Compendium.Sections.Options;
 using InventoryTools.Services;
+using InventoryTools.Ui;
 
 namespace InventoryTools.Compendium.Sections;
 
@@ -16,7 +17,7 @@ public class ItemSourcesSection : ViewSection
 
     public delegate ItemSourcesSection Factory(ItemSourcesSectionOptions options);
 
-    public ItemSourcesSection(ItemSourcesSectionOptions options, ItemInfoRenderService itemInfoRenderService, MediatorService mediatorService, ImGuiService imGuiService) : base(imGuiService)
+    public ItemSourcesSection(ItemSourcesSectionOptions options, ItemInfoRenderService itemInfoRenderService, MediatorService mediatorService, ImGuiService imGuiService) : base(options, imGuiService)
     {
         _options = options;
         _itemInfoRenderService = itemInfoRenderService;
@@ -28,9 +29,23 @@ public class ItemSourcesSection : ViewSection
     {
         if (_options.Sources.Any())
         {
-            _mediatorService.Publish(_itemInfoRenderService.DrawItemSourceIconsContainer("ItemSources",
-                32 * ImGui.GetIO().FontGlobalScale - ImGui.GetStyle().FramePadding.X, new Vector2(32, 32),
-                _options.Sources));
+            if (_options.SourceType == SourceType.Source)
+            {
+                _mediatorService.Publish(_itemInfoRenderService.DrawItemSourceIconsContainer("ItemSources",
+                    32 * ImGui.GetIO().FontGlobalScale - ImGui.GetStyle().FramePadding.X, new Vector2(32, 32),
+                    _options.Sources));
+            }
+            else
+            {
+                _mediatorService.Publish(_itemInfoRenderService.DrawItemUseIconsContainer("ItemSources",
+                    32 * ImGui.GetIO().FontGlobalScale - ImGui.GetStyle().FramePadding.X, new Vector2(32, 32),
+                    _options.Sources));
+            }
         }
+    }
+
+    public override bool IsEmpty(SectionState sectionState)
+    {
+        return _options.Sources.Count == 0;
     }
 }

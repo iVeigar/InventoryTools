@@ -73,3 +73,40 @@ public class TooltipIngredientPatchTooltipColorSetting : GenericGameColorSetting
         this.DefaultValue = 540;
     }
 }
+public class TooltipGlamourReadySetColorSetting : GenericGameColorSetting
+{
+    public override uint? Order { get; } = 1;
+
+    public TooltipGlamourReadySetColorSetting(ILogger<TooltipGlamourReadySetColorSetting> logger, ImGuiService imGuiService, ExcelSheet<UIColor> uiColorSheet) : base("TooltipGlamourReadySetColor", "Text Colour", "When enabled, what colour should the text be for the 'Outfit Glamour' tooltip text be?", null, SettingCategory.ToolTips, SettingSubCategory.GlamourReadySet, "1.12.0.0", logger, imGuiService, uiColorSheet)
+    {
+        this.DefaultValue = 500;
+    }
+}
+
+public class TooltipGlamourReadySetAcquiredColorSetting : GenericGameColorSetting
+{
+    public override uint? Order { get; } = 2;
+
+    public TooltipGlamourReadySetAcquiredColorSetting(ILogger<TooltipGlamourReadySetAcquiredColorSetting> logger, ImGuiService imGuiService, ExcelSheet<UIColor> uiColorSheet) : base("TooltipGlamourReadySetAcquiredColor", "Acquired Item Colour", "In detailed mode, what colour should acquired items be shown in?", null, SettingCategory.ToolTips, SettingSubCategory.GlamourReadySet, "1.13.0.0", logger, imGuiService, uiColorSheet)
+    {
+        this.DefaultValue = 45;
+    }
+}
+public class TooltipGlamourReadySetNotAcquiredColorSetting : GenericGameColorSetting
+{
+    public override uint? Order { get; } = 3;
+
+    public TooltipGlamourReadySetNotAcquiredColorSetting(ILogger<TooltipGlamourReadySetNotAcquiredColorSetting> logger, ImGuiService imGuiService, ExcelSheet<UIColor> uiColorSheet) : base("TooltipGlamourReadySetNotAcquiredColor", "Not Acquired Item Colour", "In detailed mode, what colour should not-yet-acquired items be shown in?", null, SettingCategory.ToolTips, SettingSubCategory.GlamourReadySet, "1.13.0.0", logger, imGuiService, uiColorSheet)
+    {
+        this.DefaultValue = 17;
+    }
+}
+public class TooltipCofferLootColorSetting : GenericGameColorSetting
+{
+    public override uint? Order { get; } = 1;
+
+    public TooltipCofferLootColorSetting(ILogger<TooltipCofferLootColorSetting> logger, ImGuiService imGuiService, ExcelSheet<UIColor> uiColorSheet) : base("TooltipCofferLootColor", "Text Colour", "When enabled, what colour should the text be for the 'Coffer Loot' tooltip text be?", null, SettingCategory.ToolTips, SettingSubCategory.CofferLoot, "1.12.0.0", logger, imGuiService, uiColorSheet)
+    {
+        this.DefaultValue = 541;
+    }
+}

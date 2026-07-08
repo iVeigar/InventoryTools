@@ -1,8 +1,6 @@
 using System;
 using AllaganLib.GameSheets.Model;
-using AllaganLib.GameSheets.Sheets;
 using AllaganLib.GameSheets.Sheets.Rows;
-using CriticalCommonLib.Interfaces;
 using CriticalCommonLib.Services;
 
 using Dalamud.Game.Text.SeStringHandling;

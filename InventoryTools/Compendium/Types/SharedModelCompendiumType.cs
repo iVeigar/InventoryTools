@@ -111,6 +111,7 @@ public class SharedModelCompendiumType : CompendiumType<SharedModelCache.SharedM
         viewBuilder.AddItemListSection(new ItemListSectionOptions()
         {
             Items = row.Items.Select(c => new ItemInfo(c)),
+            SectionKey = "items",
             SectionName = "Items",
         });
     }

@@ -10,6 +10,7 @@ using Dalamud.Interface.Utility.Raii;
 using Dalamud.Plugin.Services;
 using InventoryTools.Compendium.Interfaces;
 using InventoryTools.Compendium.Models;
+using InventoryTools.Compendium.Sections.Options;
 using InventoryTools.Compendium.Services;
 using InventoryTools.Services;
 using Lumina.Excel;
@@ -29,7 +30,7 @@ public class LevelViewSection : ViewSection
 
     public delegate LevelViewSection Factory(LevelViewSectionOptions options);
 
-    public LevelViewSection(LevelViewSectionOptions options, LevelSheet levelSheet, ITextureProvider textureProvider, ICompendiumTypeFactory compendiumTypeFactory, ImGuiService imGuiService) : base(imGuiService)
+    public LevelViewSection(LevelViewSectionOptions options, LevelSheet levelSheet, ITextureProvider textureProvider, ICompendiumTypeFactory compendiumTypeFactory, ImGuiService imGuiService) : base(options, imGuiService)
     {
         _options = options;
         _levelSheet = levelSheet;
@@ -100,8 +101,8 @@ public class LevelViewSection : ViewSection
     }
 }
 
-public class LevelViewSectionOptions
+public record LevelViewSectionOptions : SectionOptions
 {
-    public string SectionName { get; init; } = "Location";
+    public override required string SectionName { get; init; } = "Location";
     public RowRef<Level> Level { get; init; }
 }

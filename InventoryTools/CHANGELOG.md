@@ -8,6 +8,131 @@ Instead the changelog reader and automation surrounding plugin PRs will add the 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.html).
 
+## [15.0.9] - 2026-06-14
+
+### Added
+- Added "Support Dump" feature, making it easier for plugin users to provide their logs + config
+- Added a new "Add From Game" menu to the Crafts list replacing the "Add Company Crafts" button. This currently supports the Company Craft parts menu and the Grand Company Supply/Provision windows.
+
+### Fixed
+- Fixed a exception being thrown in the crafts window when certain items are added
+
+### Changed
+- Lumina Supplemental data update
+
+## [15.0.8] - 2026-06-14
+
+### Added
+- Added new notification system for Craft Lists
+  - Be notified when you gather/craft/buy items via chat and/or sounds
+  - Added a "Craft Notifications" wizard step to configure these notifications for your existing craft lists
+- Added a "Is Unobtainable? Filter/Column"
+- Added Auxesia loot as a source
+
+### Fixed
+- Certain filters were not showing and should now be visible
+
+### Removed
+- Old craft tracker removed and replaced with acqusition tracker entirely
+
+
+## [15.0.7] - 2026-05-31
+
+### Added
+- New Chocobo Colour Window, helps you recolour your chocobo by providing a list of the fruit required, craft list integration and a tracker!
+- Master Recipe book compendium now list the unlock status of each book
+
+### Changed
+- Switched the default ingredient sourcing list to include orange scrip instead of white.
+
+### Fixed
+- Folklore tomes should correctly list as locked/unlocked.
+- Stopped the new feature callout from taking focus and switched it to using a modal
+
+## [15.0.6] - 2026-05-30
+
+### Added
+- New Requirements System for craft lists which tracks:
+  - Level Requirements
+  - Tomes
+  - Specialist Souls
+- Item Level/Equip Level columns added to gearset compendium listing
+- Added "Copy Name" context menu feature
+- Added NPC highlighting setting per list
+- Added "Craftable Only" checkbox to item add sidebar in craft window
+- Added Job Soul Crystal, Craft Soul Crystal, Folklore Tomes, Mastercraft Recipebooks to the compendium and the related items as uses
+- Added "Is Stackable?" Column/Filter
+- Added "Stack Size" Column/Filter 
+- Added loot to the compendium instance view window
+- Added content type grouping to the compendium instances list.
+
+### Changed
+- Switched to using font awesome through out the app instead of custom icons + fixed width icon font
+- NPCs will only highlight in craft lists if you actually need to buy something from them
+- Unlocked/Not Unlocked will be shown for compendium view window tags
+- Plugin will no longer output a message when starting
+
+## [15.0.5] - 2026-05-12
+
+### Added
+- Outfit Glamour tooltip now has the ability to pick a search scope, defaulting to the Armoire/Glamour Chest for those that would like to track acquisition outside these.
+- Added Character/Retainer - World - Category - Quantity - Quality as a mode to the `Add Item Locations` tooltip.
+
+### Fixed
+- If the compendium state fails to load, the potential exception is caught and logged
+- Hopefully fixed the crash on exit by not manipulating nameplates while the game is unloading
+- The Equippable by Gender/Race column filters are now free type instead of being a dropdown allowing for complex filtering
+- Fixed a bug where context menu additions were being placed on menus not related to items.
+
+## [15.0.4] - 2026-05-10
+
+### Added
+- Shop NPC highlighting is now on by default when highlighting items. The option to adjust colours, and enable/disable the feature are available in the Shop Highlighting section of Settings -> Highlighting.
+- Added the ability to view/modify the item ingredient overrides for craft lists via a new tab in settings. This can also be edited in the default list and will be inherited in new lists.
+
+### Changed
+- Shop Highlighting settings were moved to their own sub-section in settings.
+- Reworked the Lists/Craft Lists/Import & Export pages in configuration into a single page with a new reordering system
+- The Ingredient Sourcing was reworked to provide easier reordering and a reset to default button
+
+### Fixed
+- Some coffers were auto-matched and the auto-matching did not take item level into account, this should reduce the false positives in coffers. 
+- Fixed a bug where the context menu additions would not show up when right clicking on a item in the try on window.
+- Allowed for larger list import codes to be pasted into the list import window.
+
+## [15.0.3] - 2026-05-09
+
+### Added
+- The colour of acquired/not acquired lines can be configured for the Outfit tooltip(when in detailed mode)
+
+### Fixed
+- Items that are unlocked and not stored are now considered when determining how many items in a set are owned in the Coffer Loot tooltip
+
+## [15.0.2] - 2026-05-09
+
+### Added
+- Coffer Loot tooltip, showing you how many items you have from a coffer or if an item is part of a coffer which one and how many items you have from it. The location is configurable.
+- Outfit Glamour tooltip, shows you how many items of a outfit glamour you already have in your armoire/glamour chest.
+- Recipe Unlocked column/filter, shows whether all requirements to craft this item (job level, mastery book, specialization) are met by the current character.
+- Compendium View windows can have their section layout edited, you can reorder/alter the visibility of individual sections.
+- Added a Hand-ins column to the Leve Compendium + View window
+- Added a /compendiumlist command for opening a specific compendium listing screen
+
+### Changed
+- Plugin now uses async loading though some parts of the plugin still load sync(being worked on)
+- References to "Glamour Ready" where renamed to "Outfit Glamour" to match the game's naming
+
+### Fixed
+- Fixed a bug when closing certain windows that would throw an exception
+- When venture is the selected source in a craft list it'll now show how many you need to get along with the venture you need instead of just showing the venture name.
+- Fix the EXP reward shown for craft leves in the leve compendium
+- Fixed the required items shown in the Custom Deliveries NPCs compendium view + split the items into tiers
+
+## [15.0.1] - 2026-05-05
+
+### Fixed
+- Fix an issue that occurs when trying to open the "Open Map" menu for certain spearfishing items.
+
 ## [15.0.0] - 2026-05-02
 
 ### Changed

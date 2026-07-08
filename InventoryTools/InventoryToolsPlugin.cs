@@ -5,6 +5,8 @@ using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Net.Http;
 using System.Reflection;
+using System.Threading;
+using System.Threading.Tasks;
 using AllaganLib.Data.Service;
 using AllaganLib.GameSheets.Caches;
 using AllaganLib.GameSheets.LuminaSheets;
@@ -35,6 +37,7 @@ using DalaMock.Host.Mediator;
 using DalaMock.Shared.Classes;
 using DalaMock.Shared.Extensions;
 using Dalamud.Game.ClientState.Objects;
+using Dalamud.Game.Text;
 using Dalamud.Interface.ImGuiFileDialog;
 using Dalamud.Interface.Windowing;
 using Dalamud.Plugin;
@@ -67,7 +70,9 @@ using InventoryTools.Logic.ItemRenderers;
 using InventoryTools.Logic.Settings.Abstract;
 using InventoryTools.Overlays;
 using InventoryTools.ServiceConfigurations;
+using InventoryTools.Groupers;
 using InventoryTools.Services;
+using InventoryTools.Services.GameCraftSources;
 using InventoryTools.Tooltips;
 using InventoryTools.Ui;
 using InventoryTools.Ui.Pages;
@@ -84,27 +89,20 @@ namespace InventoryTools
     {
         private readonly IPluginLog _pluginLog;
         private readonly IFramework _framework;
+        private readonly IChatGui _chatGui;
         private readonly BootConfigurationService bootService;
+        private Stopwatch? _loadConfigStopwatch;
         private IDalamudPluginInterface? PluginInterface { get; set; }
 
-        public InventoryToolsPlugin(IDalamudPluginInterface pluginInterface, IPluginLog pluginLog, IFramework framework) : base(pluginInterface)
+        public InventoryToolsPlugin(IDalamudPluginInterface pluginInterface, IPluginLog pluginLog, IFramework framework, IChatGui chatGui) : base(pluginInterface)
         {
             bootService = new BootConfigurationService(pluginInterface, framework, pluginLog);
-            Stopwatch loadConfigStopwatch = new Stopwatch();
-            loadConfigStopwatch.Start();
-            pluginLog.Verbose("Starting Allagan Tools.");
             _pluginLog = pluginLog;
             _framework = framework;
+            _chatGui = chatGui;
             PluginInterface = pluginInterface;
             ECommonsMain.Init(PluginInterface, this, ECommons.Module.DalamudReflector);
-            this.Host = CreateHost();
-            Start();
-            this.Host.Services.GetRequiredService<MediatorService>().Publish(new PluginLoadedMessage());
-            loadConfigStopwatch.Stop();
-            pluginLog.Verbose("Took " + loadConfigStopwatch.Elapsed.TotalSeconds + " to start Allagan Tools.");
         }
-
-        public IHost Host { get; set; }
 
         public override HostedPluginOptions ConfigureOptions()
         {
@@ -133,9 +131,10 @@ namespace InventoryTools
             builder.RegisterSingletonsSelfAndInterfaces<ISampleFilter>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<IFeature>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<IItemInfoRenderer>(dataAccess);
+            builder.RegisterSingletonsSelfAndInterfaces<IGameCraftSource>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<IDebugPane>(typeof(ShopMonitorDebugPane).Assembly); //Register AllaganLib.Monitor debug panes
             builder.RegisterSingletonsSelfAndInterfaces<IDebugPane>(dataAccess); //Register InventoryTools debug panes
-            builder.RegisterSingletonsSelfAndInterfaces<IFilter>(dataAccess).Where(c => c.GetInterface("IGenericFilter") == null); //Generic filters should not be registered as IFilters as we don't want them to show up anywhere we want to iterate over all available filters
+            builder.RegisterSingletonsSelfAndInterfaces<IFilter>(dataAccess).Where(c => c.GetInterface("IGenericFilter") == null || (c.BaseType?.GetInterface("IGenericFilter") ?? null) != null); //Generic filters should not be registered as IFilters as we don't want them to show up anywhere we want to iterate over all available filters. Also include filters that inherit from a class that has IGenericFilter
 
             //Register all classes that are transients and implement a particular interface/class
             builder.RegisterTransientsSelfAndInterfaces<IColumnSetting>(dataAccess);
@@ -158,7 +157,7 @@ namespace InventoryTools
             this.RegisterHostedService(typeof(Chat2Ipc));
             this.RegisterHostedService(typeof(ConfigurationManagerService));
             this.RegisterHostedService(typeof(ContextMenuService));
-            this.RegisterHostedService(typeof(HostedCraftMonitor));
+            this.RegisterHostedService(typeof(CraftListTrackingService));
             this.RegisterHostedService(typeof(HostedInventoryHistory));
             this.RegisterHostedService(typeof(HostedUniversalis));
             this.RegisterHostedService(typeof(HotkeyService));
@@ -211,29 +210,25 @@ namespace InventoryTools
             builder.RegisterSingletonSelfAndInterfaces<CharacterScopeCalculator>();
             builder.RegisterSingletonSelfAndInterfaces<ChatUtilities>();
             builder.RegisterSingletonSelfAndInterfaces<ClassJobService>();
+            builder.RegisterSingletonSelfAndInterfaces<ItemObtainabilityService>();
             builder.RegisterSingletonSelfAndInterfaces<ClipboardService>();
             builder.RegisterSingletonSelfAndInterfaces<ConfigurationWizardService>();
             builder.RegisterSingletonSelfAndInterfaces<ConfigurationWizardService>();
             builder.RegisterSingletonSelfAndInterfaces<ContainerAwareCsvLoader>();
-            builder.RegisterSingletonSelfAndInterfaces<CraftFiltersPage>();
+            builder.RegisterSingletonSelfAndInterfaces<ListsPage>();
             builder.RegisterSingletonSelfAndInterfaces<CraftGroupingLocalizer>();
             builder.RegisterSingletonSelfAndInterfaces<CraftItemLocalizer>();
             builder.RegisterSingletonSelfAndInterfaces<CraftPricer>();
             builder.RegisterSingletonSelfAndInterfaces<CraftingCache>();
-            builder.RegisterSingletonSelfAndInterfaces<DalamudFileDialogManager>();
-            builder.RegisterSingletonSelfAndInterfaces<WindowSystem>();
-            builder.RegisterSingletonSelfAndInterfaces<FileDialogManager>();
             builder.RegisterSingletonSelfAndInterfaces<FilterService>();
-            builder.RegisterSingletonSelfAndInterfaces<FiltersPage>();
-            builder.RegisterSingletonSelfAndInterfaces<Font>();
             builder.RegisterSingletonSelfAndInterfaces<GameInterface>();
             builder.RegisterSingletonSelfAndInterfaces<GameInteropService>();
             builder.RegisterSingletonSelfAndInterfaces<GameUiManager>();
+            builder.RegisterSingletonSelfAndInterfaces<GameCraftSourceService>();
             builder.RegisterSingletonSelfAndInterfaces<HostedUniversalisConfiguration>();
             builder.RegisterSingletonSelfAndInterfaces<ImGuiMenuService>();
             builder.RegisterSingletonSelfAndInterfaces<ImGuiService>();
             builder.RegisterSingletonSelfAndInterfaces<ImGuiTooltipService>().PropertiesAutowired(PropertyWiringOptions.AllowCircularDependencies);
-            builder.RegisterSingletonSelfAndInterfaces<ImportExportPage>();
             builder.RegisterSingletonSelfAndInterfaces<IngredientPatchService>();
             builder.RegisterSingletonSelfAndInterfaces<IngredientPreferenceLocalizer>();
             builder.RegisterSingletonSelfAndInterfaces<InventoryHistory>();
@@ -250,8 +245,11 @@ namespace InventoryTools
             builder.RegisterSingletonSelfAndInterfaces<MinifyResolver>();
             builder.RegisterSingletonSelfAndInterfaces<MobTracker>();
             builder.RegisterSingletonSelfAndInterfaces<PluginCommands>();
+            builder.RegisterSingletonSelfAndInterfaces<CalloutService>();
+            builder.RegisterSingletonSelfAndInterfaces<MissingRequirementsGrouper>();
             builder.RegisterSingletonSelfAndInterfaces<PopupService>();
             builder.RegisterSingletonSelfAndInterfaces<QuestManagerService>();
+            builder.RegisterSingletonSelfAndInterfaces<SupportDumpService>();
             builder.RegisterSingletonSelfAndInterfaces<SeTime>();
             builder.RegisterSingletonSelfAndInterfaces<ShopHighlighting>();
             builder.RegisterSingletonSelfAndInterfaces<TeleporterIpc>();
@@ -259,11 +257,12 @@ namespace InventoryTools
             builder.RegisterSingletonSelfAndInterfaces<TryOn>();
             builder.RegisterSingletonSelfAndInterfaces<UnlockTrackerService>();
             builder.RegisterSingletonSelfAndInterfaces<VersionInfo>();
-            builder.RegisterSingletonSelfAndInterfaces<WindowSystemFactory>();
             builder.RegisterSingletonSelfAndInterfaces<CsvLoaderService>();
             builder.RegisterSingletonSelfAndInterfaces<BackgroundTaskCollector>();
             builder.RegisterSingletonSelfAndInterfaces<AchievementMonitorConfiguration>();
             builder.RegisterSingletonSelfAndInterfaces<UIStateService>();
+            builder.RegisterSingletonSelfAndInterfaces<ChocoboColourSolver>();
+
             builder.RegisterSingletonSelfAndInterfaces<RestockService>();
             
             //Transient registrations
@@ -529,6 +528,48 @@ namespace InventoryTools
         {
 
 
+        }
+
+        public override async Task StartingAsync(CancellationToken cancellationToken)
+        {
+            _loadConfigStopwatch = new Stopwatch();
+            _loadConfigStopwatch.Start();
+#if DEBUG
+            _chatGui.Print("Starting plugin.", "Allagan Tools");
+#endif
+            _pluginLog.Verbose("Starting Allagan Tools.");
+
+        }
+
+        public override async Task StoppingAsync()
+        {
+            _loadConfigStopwatch = new Stopwatch();
+            _loadConfigStopwatch.Start();
+        }
+
+        public override async Task StartedAsync(CancellationToken cancellationToken)
+        {
+            _loadConfigStopwatch?.Stop();
+            this.Host?.Services.GetRequiredService<MediatorService>().Publish(new PluginLoadedMessage());
+            if (_loadConfigStopwatch != null)
+            {
+                _pluginLog.Verbose("Took " + _loadConfigStopwatch.Elapsed.TotalSeconds.ToString("N2") +
+                                   " seconds to start Allagan Tools.");
+#if DEBUG
+                _chatGui.Print("Finished loading plugin. ", "Allagan Tools");
+                _chatGui.Print("Took " + _loadConfigStopwatch.Elapsed.TotalSeconds.ToString("N2") + " seconds to start.", "Allagan Tools");
+#endif
+            }
+        }
+
+
+        public override async Task StoppedAsync()
+        {
+            if (_loadConfigStopwatch != null)
+            {
+                _pluginLog.Verbose("Took " + _loadConfigStopwatch.Elapsed.TotalSeconds.ToString("N2") +
+                                   " seconds to stop Allagan Tools.");
+            }
         }
 
         protected virtual void Dispose(bool disposing)

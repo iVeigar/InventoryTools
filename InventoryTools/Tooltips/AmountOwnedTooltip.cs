@@ -213,6 +213,55 @@ public class AmountOwnedTooltip : BaseTooltip
                     locations.Add(groupedItems.Count - Configuration.TooltipLocationLimit + " other locations.");
                 }
             }
+            else if (Configuration.TooltipLocationDisplayMode == TooltipLocationDisplayMode.CharacterWorldCategoryQuantityQuality)
+            {
+                var groupedItems = ownedItems.GroupBy(c => (c.RetainerId, c.SortedCategory, c.Flags)).ToList();
+                foreach (var oGroup in groupedItems)
+                {
+                    var quantity = oGroup.Sum(c => c.Quantity);
+                    storageCount += (uint)quantity;
+
+                    if (locations.Count >= Configuration.TooltipLocationLimit)
+                    {
+                        continue;
+                    }
+
+                    var name = _characterMonitor.GetCharacterNameById(oGroup.Key.RetainerId);
+                    if (Configuration.TooltipAddCharacterNameOwned)
+                    {
+                        var owner = _characterMonitor.GetCharacterNameById(oGroup.Key.RetainerId, true);
+                        if (owner.Trim().Length != 0)
+                        {
+                            name += " (" + owner + ")";
+                        }
+                    }
+
+                    var worldName = "";
+                    if (_characterMonitor.Characters.TryGetValue(oGroup.Key.RetainerId, out var character))
+                    {
+                        worldName = character.World?.Name.ExtractText() ?? "";
+                    }
+
+                    var typeIcon = "";
+                    if ((oGroup.Key.Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.HighQuality) != 0)
+                    {
+                        typeIcon = "\uE03c";
+                    }
+                    else if ((oGroup.Key.Flags & FFXIVClientStructs.FFXIV.Client.Game.InventoryItem.ItemFlags.Collectable) != 0)
+                    {
+                        typeIcon = "\uE03d";
+                    }
+
+                    var locationLine = string.IsNullOrEmpty(worldName)
+                        ? $"{name} - {oGroup.Key.SortedCategory.FormattedName()} - " + quantity + " " + typeIcon
+                        : $"{name} - {worldName} - {oGroup.Key.SortedCategory.FormattedName()} - " + quantity + " " + typeIcon;
+                    locations.Add(locationLine);
+                }
+                if (groupedItems.Count > Configuration.TooltipLocationLimit)
+                {
+                    locations.Add(groupedItems.Count - Configuration.TooltipLocationLimit + " other locations.");
+                }
+            }
             else if (Configuration.TooltipLocationDisplayMode == TooltipLocationDisplayMode.CharacterQuantityQuality)
             {
                 var groupedItems = ownedItems.GroupBy(c => (c.RetainerId, c.Flags)).ToList();

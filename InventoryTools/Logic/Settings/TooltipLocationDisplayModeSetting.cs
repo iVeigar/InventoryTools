@@ -43,6 +43,10 @@ public class TooltipLocationDisplayModeSetting : ChoiceSetting<TooltipLocationDi
                     TooltipLocationDisplayMode.CharacterCategoryQuantityQuality,
                     "Character/Retainer - Category - Quantity - Quality"
                 },
+                {
+                    TooltipLocationDisplayMode.CharacterWorldCategoryQuantityQuality,
+                    "Character/Retainer - World - Category - Quantity - Quality"
+                },
             };
         }
     }

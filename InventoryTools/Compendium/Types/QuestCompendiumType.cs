@@ -152,32 +152,40 @@ public class QuestCompendiumType : CompendiumType<Quest>
         {
             viewBuilder.Description = dialogue.Value.Value.ToImGuiString();
         }
-        viewBuilder.AddTag("Completed?", "Is the quest completed?", () => _unlockState.IsQuestCompleted(row) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
+        viewBuilder.AddTag(
+            () => _unlockState.IsQuestCompleted(row) ? "Completed" : "Not Completed",
+            () => "Is the quest completed?",
+            () => _unlockState.IsQuestCompleted(row) ? ImGuiColors.HealerGreen : ImGuiColors.DalamudRed);
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
             RelatedRefs = row.PreviousQuest.Select(c => (RowRef)c).ToList(),
+            SectionKey = "previous_quests",
             SectionName = "Previous Quests",
-            HideIfEmpty = false
+            HideWhenEmpty = false
         });
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
             RelatedRefs = _questSheet.Where(c => c.PreviousQuest.Any(c => c.RowId == row.RowId)).Select(c => (RowRef)new RowRef<Quest>(c.ExcelPage.Module, c.RowId)).ToList(),
+            SectionKey = "next_quests",
             SectionName = "Next Quests",
-            HideIfEmpty = false
+            HideWhenEmpty = false
         });
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
             RelatedRef = (RowRef)row.ClassJobRequired,
+            SectionKey = "required_class",
             SectionName = "Required Class"
         });
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
             RelatedRef = (RowRef)row.ClassJobUnlock,
+            SectionKey = "class_unlocked",
             SectionName = "Class Unlocked"
         });
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
             RelatedRef = (RowRef)row.BeastTribe,
+            SectionKey = "allied_society_beast_tribe",
             SectionName = "Allied Society (Beast Tribe)"
         });
         //TODO: Add in some sort of automatic level mapping shit
@@ -200,6 +208,7 @@ public class QuestCompendiumType : CompendiumType<Quest>
             viewBuilder.AddMapLinkSectionSection(new MapLinkViewSectionOptions()
             {
                 MapLink = new MapLinkEntry(Icons.FlagIcon, issuerName,  issuerLocation.FormattedName, issuerLocation),
+                SectionKey = "issuer_location",
                 SectionName = "Issuer Location"
             });
         }
@@ -208,6 +217,7 @@ public class QuestCompendiumType : CompendiumType<Quest>
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
             RelatedRefs = relatedNpcs,
+            SectionKey = "related_npcs",
             SectionName = "Related NPCs",
             Filter = typeof(ENpcBase)
         });
@@ -234,6 +244,7 @@ public class QuestCompendiumType : CompendiumType<Quest>
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
             RelatedRefs = relatedInstances,
+            SectionKey = "related_instances",
             SectionName = "Related Instances"
         });
 

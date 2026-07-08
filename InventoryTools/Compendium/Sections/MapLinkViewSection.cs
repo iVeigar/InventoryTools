@@ -27,7 +27,7 @@ public sealed class MapLinkViewSection : ViewSection
         ITextureProvider textureProvider,
         IMenuProvider<MapLinkEntry> menuProvider,
         ImGuiService imGuiService,
-        IChatUtilities chatUtilities) : base(imGuiService)
+        IChatUtilities chatUtilities) : base(options, imGuiService)
     {
         _options = options;
         _textureProvider = textureProvider;

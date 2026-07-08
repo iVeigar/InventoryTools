@@ -114,25 +114,29 @@ public class BeastTribeCompendiumType : CompendiumType<BeastTribe>
         var mainQuests = tribeQuests.Where(c => !c.IsRepeatable).Select(c => c.AsUntypedRowRef()).ToList();
         viewBuilder.AddLevelMapLinkSection(new LevelViewSectionOptions()
         {
+            SectionKey = "location",
             SectionName = "Location",
             Level = row.Level
         });
         viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()
         {
+            SectionKey = "currency_item",
             SectionName = "Currency Item",
             RelatedRef = (RowRef)row.CurrencyItem,
         });
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
+            SectionKey = "main_quests",
             SectionName = "Main Quests",
             RelatedRefs = mainQuests,
-            HideIfEmpty = true
+            HideWhenEmpty = true
         });
         viewBuilder.AddCollectionRowRefSection(new CollectionRowRefSectionOptions()
         {
+            SectionKey = "repeatable_quests",
             SectionName = "Repeatable Quests",
             RelatedRefs = repeatableQuests,
-            HideIfEmpty = true
+            HideWhenEmpty = true
         });
     }
 

@@ -4,6 +4,7 @@ using Dalamud.Bindings.ImGui;
 using Dalamud.Interface.Utility.Raii;
 using InventoryTools.Compendium.Interfaces;
 using InventoryTools.Compendium.Models;
+using InventoryTools.Compendium.Sections.Options;
 using InventoryTools.Services;
 
 namespace InventoryTools.Compendium.Sections;
@@ -13,10 +14,13 @@ public abstract class ViewSection : ICompendiumViewSection
     private readonly ImGuiService _imGuiService;
     private List<ImGuiService.HeaderButton>? _headerButtons;
 
-    public ViewSection(ImGuiService imGuiService)
+    public ViewSection(SectionOptions sectionOptions, ImGuiService imGuiService)
     {
+        SectionOptions = sectionOptions;
         _imGuiService = imGuiService;
     }
+
+    public SectionOptions SectionOptions { get; }
 
     public void Draw(SectionState sectionState)
     {
@@ -81,10 +85,20 @@ public abstract class ViewSection : ICompendiumViewSection
         }
     }
 
-    public virtual bool ShouldDraw(SectionState sectionState)
+    public bool ShouldDraw(SectionState sectionState)
     {
+        if (IsEmpty(sectionState) && this.SectionOptions.HideWhenEmpty)
+        {
+            return false;
+        }
         return true;
     }
+
+    public virtual bool IsEmpty(SectionState sectionState)
+    {
+        return false;
+    }
+
 
     public abstract string SectionName { get; }
 

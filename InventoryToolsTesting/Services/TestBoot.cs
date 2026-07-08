@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Autofac;
 using CriticalCommonLib.Services.Mediator;
-using DalaMock.Core.DI;
+using DalaMock.Core.Configuration;
 using DalaMock.Core.Mocks;
 using DalaMock.Core.Plugin;
 using DalaMock.Host.Mediator;
