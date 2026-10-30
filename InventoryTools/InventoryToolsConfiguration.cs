@@ -45,7 +45,7 @@ namespace InventoryTools
         private bool _invertTabHighlighting;
         private bool _highlightDestination;
         private bool _highlightDestinationEmpty;
-        private bool _addMoreInformationContextMenu;
+        private bool _addMoreInformationContextMenu = true;
         private bool _addToCraftListContextMenu;
         private bool _addToActiveCraftListContextMenu;
         private bool _openCraftingLogContextMenu;
@@ -346,7 +346,7 @@ namespace InventoryTools
             return WindowsIgnoreEscape.Contains(windowName.Name);
         }
 
-        public int SelectedConfigurationPage { get; set; }
+        public string? SelectedConfigurationPageKey { get; set; }
         public bool ShowFilterTab { get; set; } = true;
         public bool SwitchFiltersAutomatically { get; set; } = true;
         public bool SwitchCraftListsAutomatically { get; set; } = true;
@@ -362,7 +362,7 @@ namespace InventoryTools
         private bool _tooltipDisplayUnlock;
         private List<ulong>? _tooltipDisplayUnlockCharacters = new();
         private bool _tooltipDisplayMarketAveragePrice;
-        private bool _tooltipDisplayMarketLowestPrice = true;
+        private bool _tooltipDisplayMarketLowestPrice;
         private bool _tooltipAddCharacterNameOwned;
         private bool _tooltipDisplayRetrieveAmount;
         private int _tooltipLocationLimit = 10;
@@ -757,16 +757,6 @@ namespace InventoryTools
             }
         }
 
-        public bool TrackMobSpawns
-        {
-            get => _trackMobSpawns;
-            set
-            {
-                _trackMobSpawns = value;
-                IsDirty = true;
-            }
-        }
-
         public bool TooltipDisplayHeader
         {
             get => _tooltipDisplayHeader;
@@ -883,8 +873,6 @@ namespace InventoryTools
 
         public string? ActiveUiFilter { get; set; } = null;
 
-        public bool TetrisEnabled { get; set; } = false;
-
         public string? ActiveBackgroundFilter { get; set; }
 
         public string? ActiveCraftList { get; set; } = null;
@@ -911,7 +899,8 @@ namespace InventoryTools
         private bool _showWizardNewFeatures { get; set; } = true;
 
         private HashSet<string>? _wizardVersionsSeen { get; set; }
-        public int SelectedHelpPage { get; set; }
+
+        public string? SelectedHelpPageKey { get; set; }
         #if DEBUG
         public int SelectedDebugPage { get; set; }
         #endif
@@ -1241,6 +1230,25 @@ namespace InventoryTools
             else
             {
                 this.ListSettings[key] = newValue.ConvertAll(v => v.ToString());
+            }
+
+            this.IsDirty = true;
+        }
+
+        public List<string>? Get(string key, List<string>? defaultValue)
+        {
+            return this.ListSettings.TryGetValue(key, out var value) ? value : defaultValue;
+        }
+
+        public void Set(string key, List<string>? newValue)
+        {
+            if (newValue == null)
+            {
+                this.ListSettings.Remove(key);
+            }
+            else
+            {
+                this.ListSettings[key] = newValue;
             }
 
             this.IsDirty = true;

@@ -135,7 +135,7 @@ public class ClassJobCompendiumType : CompendiumType<ClassJobRow>
             });
         }
 
-        var firstQuest = _treeTipsClassQuestSheet.GetRow(row.RowId).FirstOrNull();
+        var firstQuest = _treeTipsClassQuestSheet.GetRowOrDefault(row.RowId)?.FirstOrNull();
         if (firstQuest != null)
         {
             viewBuilder.AddSingleRowRefSection(new SingleRowRefSectionOptions()

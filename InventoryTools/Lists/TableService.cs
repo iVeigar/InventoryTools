@@ -308,7 +308,14 @@ public class TableService : DisposableMediatorBackgroundService
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
-        await BackgroundProcessing(stoppingToken);
+        try
+        {
+            await BackgroundProcessing(stoppingToken);
+        }
+        catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+        {
+
+        }
     }
 
     public void RefreshTables(FilterConfiguration filterConfiguration)

@@ -75,6 +75,8 @@ using InventoryTools.Services;
 using InventoryTools.Services.GameCraftSources;
 using InventoryTools.Tooltips;
 using InventoryTools.Ui;
+using InventoryTools.Ui.Config;
+using InventoryTools.Ui.Config.Layouts;
 using InventoryTools.Ui.Pages;
 using Lumina;
 using Lumina.Excel;
@@ -128,6 +130,8 @@ namespace InventoryTools
             builder.RegisterSingletonsSelfAndInterfaces<IGameOverlay>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<IColumn>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<ISetting>(dataAccess).AsImplementedInterfaces();
+            builder.RegisterSingletonsSelfAndInterfaces<IConfigLayout>(dataAccess);
+            builder.RegisterSingletonsSelfAndInterfaces<IContentLayout>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<ISampleFilter>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<IFeature>(dataAccess);
             builder.RegisterSingletonsSelfAndInterfaces<IItemInfoRenderer>(dataAccess);
@@ -213,7 +217,8 @@ namespace InventoryTools
             builder.RegisterSingletonSelfAndInterfaces<ItemObtainabilityService>();
             builder.RegisterSingletonSelfAndInterfaces<ClipboardService>();
             builder.RegisterSingletonSelfAndInterfaces<ConfigurationWizardService>();
-            builder.RegisterSingletonSelfAndInterfaces<ConfigurationWizardService>();
+            builder.RegisterSingletonSelfAndInterfaces<SettingCoverageService>();
+            builder.RegisterSingletonSelfAndInterfaces<ConfigNavigationState>();
             builder.RegisterSingletonSelfAndInterfaces<ContainerAwareCsvLoader>();
             builder.RegisterSingletonSelfAndInterfaces<ListsPage>();
             builder.RegisterSingletonSelfAndInterfaces<CraftGroupingLocalizer>();
@@ -274,7 +279,7 @@ namespace InventoryTools
             builder.RegisterTransientSelfAndInterfaces<CharacterScopePicker>();
             builder.RegisterTransientSelfAndInterfaces<StringColumnFilter>();
             builder.RegisterTransientSelfAndInterfaces<ChoiceColumnFilter>();
-            builder.RegisterTransientSelfAndInterfaces<SettingPage>();
+            builder.RegisterTransientSelfAndInterfaces<LayoutConfigPage>();
             builder.RegisterTransientSelfAndInterfaces<FilterPage>();
             builder.RegisterTransientSelfAndInterfaces<FilterState>();
             builder.RegisterTransientSelfAndInterfaces<Character>();
@@ -547,7 +552,7 @@ namespace InventoryTools
             _loadConfigStopwatch.Start();
         }
 
-        public override async Task StartedAsync(CancellationToken cancellationToken)
+        public override async Task StartedAsync()
         {
             _loadConfigStopwatch?.Stop();
             this.Host?.Services.GetRequiredService<MediatorService>().Publish(new PluginLoadedMessage());

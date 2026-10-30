@@ -3,10 +3,46 @@
 All notable changes to this project will be documented in this file.
 
 The log versioning the plugin versioning will not match as 1.0.0.0 technically does not match semantic versioning but the headache of trying to change this would be too much.
-Instead the changelog reader and automation surrounding plugin PRs will add the 1. back in 
+Instead the changelog reader and automation surrounding plugin PRs will add the 1. back in
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.html).
+
+## [15.0.13] - 2026-09-13
+
+### Changed
+- Data update for 7.56
+
+### Fixed
+- Stop potential boot issues on slow PCs
+- Fixed error when viewing BST in compendium
+
+## [15.0.12] - 2026-08-31
+
+### Added
+- Added a tooltip that lists which of your curated lists contain the hovered item
+- Added IPC `AllaganTools.ItemCountOwnedByCategory` which counts an item across a character and its retainers in a single call, scoped by inventory category with the option to include/exclude shared storage(free companies/housing)
+- Added IPC `AllaganTools.GetItemCountsByCharacter` which returns the same count broken down per character, retainer, free company and house
+
+### Fixed
+- Certain items that can be collectable were not showing up in the retrieval list in craft lists
+- IPC `AllaganTools.GetCharacterItems` and `AllaganTools.GetCharacterItemsByType` were throwing an exception when given a character with no loaded inventory, now return an empty array
+
+## [15.0.11] - 2026-08-30
+
+### Changed
+- Added configuration window setting search
+- Reworked configuration/wizard settings pages
+- Wizard now has an introduction explaining key plugin concepts
+- Changed the defaults for certain settings
+
+## [15.0.10] - 2026-08-08
+
+### Fixed
+- Updated sig for 7.55
+
+### Changed
+- Lumina Supplemental data update for 7.55
 
 ## [15.0.9] - 2026-06-14
 
